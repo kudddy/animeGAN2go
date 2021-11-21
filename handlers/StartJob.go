@@ -4,13 +4,9 @@ import (
 	"animeGAN2go/Job"
 	"animeGAN2go/MessageTypes"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 )
-
-
-
 
 func StarJobAdd(res http.ResponseWriter, req *http.Request) {
 	// нужно обернуть для получения данных от основной горутины
@@ -28,12 +24,11 @@ func StarJobAdd(res http.ResponseWriter, req *http.Request) {
 	workerStatus.MessageName = "STARTJOBADD"
 
 	//запуск воркера
-	fmt.Println("запуск воркера")
+	//fmt.Println("запуск воркера")
 	// нужна проверка не запущен ли воркер уже/узнать статус и только потом запускать
 	// пишем в memcached
 	workerStatus.Desc = "OK, start working"
 	go Job.StartWorker(t)
-
 
 	js, err := json.Marshal(workerStatus)
 
