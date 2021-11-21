@@ -17,11 +17,9 @@ import (
 	"time"
 )
 
-
-
 func GetFilePath(token string) string {
 	// отправляем запрос на получение файла
-	url := "https://api.telegram.org/bot"+plugins.Token+"/getFile?file_id="+token
+	url := "https://api.telegram.org/bot" + plugins.Token + "/getFile?file_id=" + token
 	var client http.Client
 	resp, err := client.Get(url)
 	if err != nil {
@@ -32,7 +30,6 @@ func GetFilePath(token string) string {
 	var data MessageTypes.GetFilePath
 
 	if resp.StatusCode == http.StatusOK {
-
 
 		decoder := json.NewDecoder(resp.Body)
 		err = decoder.Decode(&data)
@@ -45,8 +42,8 @@ func GetFilePath(token string) string {
 	return "-1"
 }
 
-func GetImage(path string) string{
-	url := "https://api.telegram.org/file/bot"+plugins.Token+"/" + path
+func GetImage(path string) string {
+	url := "https://api.telegram.org/file/bot" + plugins.Token + "/" + path
 
 	var client http.Client
 	resp, err := client.Get(url)
@@ -68,19 +65,16 @@ func GetImage(path string) string{
 }
 
 type SendDataToPush struct {
-	Data []string `json:"data"`
-	Action string `json:"action"`
+	Data   []string `json:"data"`
+	Action string   `json:"action"`
 }
 
-func SendImageToModel(sEncPhoto string) MessageTypes.GetModelHash{
-
-
+func SendImageToModel(sEncPhoto string) MessageTypes.GetModelHash {
 
 	var arr []string
-	arr = append(arr, "data:image/jpeg;base64," + sEncPhoto)
+	arr = append(arr, "data:image/jpeg;base64,"+sEncPhoto)
 
 	arr = append(arr, "version 2")
-
 
 	d := &SendDataToPush{Data: arr, Action: "predict"}
 
@@ -94,7 +88,6 @@ func SendImageToModel(sEncPhoto string) MessageTypes.GetModelHash{
 	url := "https://hf.space/gradioiframe/akhaliq/AnimeGANv2/api/queue/push/"
 	//url:= "http://0.0.0.0:8080/push/"
 
-
 	var client http.Client
 	contentType := "application/json"
 	resp, err := client.Post(url, contentType, r)
@@ -107,7 +100,6 @@ func SendImageToModel(sEncPhoto string) MessageTypes.GetModelHash{
 	if resp.StatusCode == http.StatusOK {
 		decoder := json.NewDecoder(resp.Body)
 
-
 		err = decoder.Decode(&data)
 		return data
 	}
@@ -118,10 +110,7 @@ type SendDataStatus struct {
 	Hash string `json:"hash"`
 }
 
-
-func GetQueenNumber(hash string) (MessageTypes.CheckStatus, MessageTypes.CheckStatusQueen, bool, bool){
-
-
+func GetQueenNumber(hash string) (MessageTypes.CheckStatus, MessageTypes.CheckStatusQueen, bool, bool) {
 
 	d := &SendDataStatus{Hash: hash}
 
@@ -154,22 +143,19 @@ func GetQueenNumber(hash string) (MessageTypes.CheckStatus, MessageTypes.CheckSt
 
 	if resp.StatusCode == http.StatusOK {
 
-
 		fmt.Println("Отсылаем")
-		errDec:= json.Unmarshal(bodyBytes, &data)
+		errDec := json.Unmarshal(bodyBytes, &data)
 		//fmt.Println(decoder)
 
 		//err = decoder.Decode(&data)
 
 		if errDec != nil {
-			errUnm:= json.Unmarshal(bodyBytes, &dataQueen)
-
-
+			errUnm := json.Unmarshal(bodyBytes, &dataQueen)
 
 			if errUnm != nil {
 				fmt.Println(err)
 				globalError = true
-				return data,  dataQueen, queen, globalError
+				return data, dataQueen, queen, globalError
 			}
 			globalError = false
 			queen = true
@@ -177,31 +163,27 @@ func GetQueenNumber(hash string) (MessageTypes.CheckStatus, MessageTypes.CheckSt
 		}
 		queen = false
 		globalError = false
-		return data,  dataQueen, queen, globalError
+		return data, dataQueen, queen, globalError
 	}
 	globalError = false
-	return data,  dataQueen, queen, globalError
+	return data, dataQueen, queen, globalError
 
 }
-
-
 
 type SendDataToTlg struct {
-
-	ChatId int `json:"chat_id"`
-	Text string `json:"text"`
+	ChatId int    `json:"chat_id"`
+	Text   string `json:"text"`
 }
 
-func SendMessage(chatId int, text string) MessageTypes.RespDataTlg{
+func SendMessage(chatId int, text string) MessageTypes.RespDataTlg {
 
 	var respData MessageTypes.RespDataTlg
 
-	url := "https://api.telegram.org/bot"+plugins.Token+"/sendMessage"
+	url := "https://api.telegram.org/bot" + plugins.Token + "/sendMessage"
 
 	d := &SendDataToTlg{ChatId: chatId, Text: text}
 
 	jsonString, err := json.Marshal(d)
-
 
 	if err != nil {
 		log.Fatal(err)
@@ -217,10 +199,9 @@ func SendMessage(chatId int, text string) MessageTypes.RespDataTlg{
 
 	res, err := client.Do(req)
 
-
 	bodyBytes, err := ioutil.ReadAll(res.Body)
 
-	errUnm:= json.Unmarshal(bodyBytes, &respData)
+	errUnm := json.Unmarshal(bodyBytes, &respData)
 
 	if errUnm != nil {
 		log.Fatal(errUnm)
@@ -228,21 +209,21 @@ func SendMessage(chatId int, text string) MessageTypes.RespDataTlg{
 
 	if res.StatusCode == http.StatusOK {
 		fmt.Println("ok, delivered")
-	} else{
+	} else {
 		fmt.Println("not ok, someting wrong")
 	}
 	return respData
 
-
 }
 
 type EditDataToTlg struct {
-	Text string `json:"text"`
-	ChatId int `json:"chat_id"`
-	MessageId int `json:"message_id"`
+	Text      string `json:"text"`
+	ChatId    int    `json:"chat_id"`
+	MessageId int    `json:"message_id"`
 }
+
 func EditMessage(chatId int, text string, messageId int) {
-	url := "https://api.telegram.org/bot"+plugins.Token+"/editMessageText"
+	url := "https://api.telegram.org/bot" + plugins.Token + "/editMessageText"
 	d := &EditDataToTlg{ChatId: chatId, Text: text, MessageId: messageId}
 
 	jsonString, err := json.Marshal(d)
@@ -262,8 +243,8 @@ func EditMessage(chatId int, text string, messageId int) {
 	client.Do(req)
 }
 
-func SendPhoto(chatId int, image string){
-
+func SendPhoto(chatId int, image string) {
+	// TODO отрефакторить это
 	bot, err := tgbotapi.NewBotAPI(plugins.Token)
 	if err != nil {
 		log.Panic(err)
@@ -274,7 +255,7 @@ func SendPhoto(chatId int, image string){
 		Name:  "picture",
 		Bytes: sEnc,
 	}
-	_, err = bot.Send(tgbotapi.NewPhoto(int64(chatId), photoFileBytes))
+	_, err = bot.Send(tgbotapi.NewPhotoUpload(int64(chatId), photoFileBytes))
 
 }
 
@@ -297,12 +278,12 @@ func StartWorker(t MessageTypes.ReqData) {
 
 		time.Sleep(1 * time.Second)
 
-		data,  dataQueen, queen, err := GetQueenNumber(d.Hash)
+		data, dataQueen, queen, err := GetQueenNumber(d.Hash)
 		if !err {
 			if queen {
-				if dataQueen.Status == "QUEUED"{
+				if dataQueen.Status == "QUEUED" {
 					text := fmt.Sprintf("Ваша очередь: %s", strconv.Itoa(dataQueen.Data))
-					if i == 0{
+					if i == 0 {
 						dataFromTlg = SendMessage(t.ChatId, text)
 					} else {
 						EditMessage(t.ChatId, text, int(dataFromTlg.Result.MessageId))
@@ -311,7 +292,7 @@ func StartWorker(t MessageTypes.ReqData) {
 					i++
 				}
 			} else {
-				if data.Status == "COMPLETE"{
+				if data.Status == "COMPLETE" {
 					//fmt.Println("Отправляем пользователю сообщение с фотографией")
 					// Отправляем пользователю сообщение с фотографией
 					imageString := strings.Split(data.Data.Data[0], ",")[1]
@@ -323,8 +304,6 @@ func StartWorker(t MessageTypes.ReqData) {
 			}
 		}
 
-
 	}
 
 }
-

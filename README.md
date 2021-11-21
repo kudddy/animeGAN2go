@@ -9,11 +9,32 @@ docker build -t docker.io/kudddy/animegan2go .
 ```
 docker push docker.io/kudddy/animegan2go:latest
 ```
+
+Запуск контейнера
+старая версия
+```
+ docker run -p 9000:9000 -d docker.io/kudddy/animegan2go:latest
+```
+новая версия
+```
+docker build \
+-t docker.io/kudddy/animegan2go:latest \
+--build-arg db_name=db \
+--build-arg db_pass=pass \
+--build-arg db_user=user \
+--build-arg db_type=postgres \
+--build-arg db_host=localhost \
+--build-arg db_port=5434 \
+--build-arg bot_token=888186754:A \
+--no-cache .
+```
+
 ## Кэш
 Для запуска движка требуется memcached, локальная запускается следующей командой:
 ```
 docker run --name my-memcache -p 11211:11211 -d memcached
 ```
+
 Дополнительные параметры для кэша:
 ```
 -m 64    # Maximum memory to use, in megabytes. 64MB is default.
