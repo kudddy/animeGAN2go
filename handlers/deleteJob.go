@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"animeGAN2go/Job"
 	"animeGAN2go/MessageTypes"
+	"animeGAN2go/plugins/pg"
 	"encoding/json"
 	"net/http"
 )
 
-func StarJobAdd(res http.ResponseWriter, req *http.Request) {
+func DeleteJob(res http.ResponseWriter, req *http.Request) {
 	// нужно обернуть для получения данных от основной горутины
 	// проверяем валидный ли токен
 	decoder := json.NewDecoder(req.Body)
@@ -19,10 +19,16 @@ func StarJobAdd(res http.ResponseWriter, req *http.Request) {
 
 	var workerStatus MessageTypes.CheckTokenResp
 
-	workerStatus.MessageName = "STARTJOBADD"
+	workerStatus.MessageName = "DELETE_JOB"
+
+	//запуск воркера
+	//fmt.Println("запуск воркера")
+	// нужна проверка не запущен ли воркер уже/узнать статус и только потом запускать
+	// пишем в memcached
+
+	pg.InsertCancelAction(int(t.ChatId))
 
 	workerStatus.Desc = "OK, start working"
-	go Job.StartWorker(t)
 
 	js, err := json.Marshal(workerStatus)
 

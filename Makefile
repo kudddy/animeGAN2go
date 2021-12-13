@@ -24,3 +24,6 @@ run:
 		-e db_port=5434 \
 		-e bot_token="YOURE_TOKEN" \
 		-d $(REGISTRY_IMAGE):latest
+
+push:
+	docker push $(REGISTRY_IMAGE):latest
