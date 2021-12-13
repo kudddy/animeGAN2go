@@ -3,20 +3,6 @@
 ## Сборка
 Cборка образа
 ```
-docker build -t docker.io/kudddy/animegan2go .
-```
-Публикация образа
-```
-docker push docker.io/kudddy/animegan2go:latest
-```
-
-Запуск контейнера
-старая версия
-```
- docker run -p 9000:9000 -d docker.io/kudddy/animegan2go:latest
-```
-новая версия
-```
 docker build \
 -t docker.io/kudddy/animegan2go:latest \
 --build-arg db_name=db \
@@ -28,7 +14,22 @@ docker build \
 --build-arg bot_token=888186754:A \
 --no-cache .
 ```
+Публикация образа
+```
+docker push docker.io/kudddy/animegan2go:latest
+```
 
+Запуск контейнера
+```
+	docker run \
+		-p 9000:9000 \
+		-d $(REGISTRY_IMAGE):latest
+```
+
+роллинг апдейт
+```
+kubectl set image deployments/shedul-gan-deployment-test shedulgantest=kudddy/animegan2go:release-03
+```
 ## Кэш
 Для запуска движка требуется memcached, локальная запускается следующей командой:
 ```
@@ -150,7 +151,5 @@ create table viewed_vacancy
 alter table vacancy_info rename to vacancy_content;
 ```
 
-## TODO
-1. надо что то придумать с кнопкой "очистить историю просмотров"
 
 

@@ -69,12 +69,14 @@ type SendDataToPush struct {
 	Action string   `json:"action"`
 }
 
-func SendImageToModel(sEncPhoto string) MessageTypes.GetModelHash {
+func SendImageToModel(sEncPhoto string, userModel string) MessageTypes.GetModelHash {
 
 	var arr []string
 	arr = append(arr, "data:image/jpeg;base64,"+sEncPhoto)
 
-	arr = append(arr, "version 2")
+	fmt.Println(userModel)
+
+	arr = append(arr, userModel)
 
 	d := &SendDataToPush{Data: arr, Action: "predict"}
 
@@ -143,17 +145,12 @@ func GetQueenNumber(hash string) (MessageTypes.CheckStatus, MessageTypes.CheckSt
 
 	if resp.StatusCode == http.StatusOK {
 
-		fmt.Println("Отсылаем")
 		errDec := json.Unmarshal(bodyBytes, &data)
-		//fmt.Println(decoder)
-
-		//err = decoder.Decode(&data)
 
 		if errDec != nil {
 			errUnm := json.Unmarshal(bodyBytes, &dataQueen)
 
 			if errUnm != nil {
-				fmt.Println(err)
 				globalError = true
 				return data, dataQueen, queen, globalError
 			}
@@ -269,7 +266,7 @@ func StartWorker(t MessageTypes.ReqData) {
 	image := GetImage(filePath)
 	// получили изображение в base64
 
-	d := SendImageToModel(image)
+	d := SendImageToModel(image, t.UserModel)
 	// отправляем файл на машину с преобразователем
 	// отправляем сообщение в push
 	var dataFromTlg MessageTypes.RespDataTlg
@@ -297,11 +294,15 @@ func StartWorker(t MessageTypes.ReqData) {
 					// Отправляем пользователю сообщение с фотографией
 					imageString := strings.Split(data.Data.Data[0], ",")[1]
 					SendPhoto(t.ChatId, imageString)
-					pg.InsertCancelAction(int(dataFromTlg.Result.From.Id))
+					pg.InsertCancelAction(t.UserID)
 
 					break
 				}
 			}
+		} else {
+			text := "Что то пошло не так:( Попробуйте загрузить другое фото!"
+			dataFromTlg = SendMessage(t.ChatId, text)
+			break
 		}
 
 	}
