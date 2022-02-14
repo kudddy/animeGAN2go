@@ -96,15 +96,18 @@ func SendImageToModel(sEncPhoto string, userModel string) MessageTypes.GetModelH
 
 	var data MessageTypes.GetModelHash
 	if err != nil {
+		fmt.Println("ошибка при отправлке запроса в модель")
 		log.Fatal(err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
+		fmt.Println("Все ок, код положительный")
 		decoder := json.NewDecoder(resp.Body)
 
 		err = decoder.Decode(&data)
 		return data
 	}
+	fmt.Println("Странный код запроса")
 	return data
 }
 
@@ -260,51 +263,63 @@ func StartWorker(t MessageTypes.ReqData) {
 	// бесконечный цикл
 	// получили путь к файлу
 
+	fmt.Println("Получаем файл id")
 	filePath := GetFilePath(t.FileId)
 	// получаем путь
-
+	fmt.Println("получаем изображение")
 	image := GetImage(filePath)
 	// получили изображение в base64
 
+	fmt.Println("Отправляем изображение в модель")
 	d := SendImageToModel(image, t.UserModel)
-	// отправляем файл на машину с преобразователем
-	// отправляем сообщение в push
+
 	var dataFromTlg MessageTypes.RespDataTlg
-	i := 0
-	for {
+	if plugins.IsZeroOfUnderlyingType(d) {
+		text := "Упс, с датацентром что то не так, повторите попытку чуть позже. Мы уже занимаемся решением этой проблемы!"
+		dataFromTlg = SendMessage(t.ChatId, text)
+	} else {
 
-		time.Sleep(1 * time.Second)
+		i := 0
+		for {
 
-		data, dataQueen, queen, err := GetQueenNumber(d.Hash)
-		if !err {
-			if queen {
-				if dataQueen.Status == "QUEUED" {
-					text := fmt.Sprintf("Ваша очередь: %s", strconv.Itoa(dataQueen.Data))
-					if i == 0 {
-						dataFromTlg = SendMessage(t.ChatId, text)
-					} else {
-						EditMessage(t.ChatId, text, int(dataFromTlg.Result.MessageId))
+			time.Sleep(1 * time.Second)
+
+			fmt.Println("в цикле")
+
+			data, dataQueen, queen, err := GetQueenNumber(d.Hash)
+			if !err {
+				if queen {
+					if dataQueen.Status == "QUEUED" {
+						text := fmt.Sprintf("Ваша очередь: %s", strconv.Itoa(dataQueen.Data))
+						if i == 0 {
+							dataFromTlg = SendMessage(t.ChatId, text)
+						} else {
+							EditMessage(t.ChatId, text, int(dataFromTlg.Result.MessageId))
+						}
+
+						i++
 					}
+				} else {
+					if data.Status == "COMPLETE" {
+						//fmt.Println("Отправляем пользователю сообщение с фотографией")
+						// Отправляем пользователю сообщение с фотографией
+						imageString := strings.Split(data.Data.Data[0], ",")[1]
+						SendPhoto(t.ChatId, imageString)
+						pg.InsertCancelAction(t.UserID)
 
-					i++
+						break
+					}
 				}
 			} else {
-				if data.Status == "COMPLETE" {
-					//fmt.Println("Отправляем пользователю сообщение с фотографией")
-					// Отправляем пользователю сообщение с фотографией
-					imageString := strings.Split(data.Data.Data[0], ",")[1]
-					SendPhoto(t.ChatId, imageString)
-					pg.InsertCancelAction(t.UserID)
-
-					break
-				}
+				text := "Что то пошло не так:( Попробуйте загрузить другое фото!"
+				dataFromTlg = SendMessage(t.ChatId, text)
+				break
 			}
-		} else {
-			text := "Что то пошло не так:( Попробуйте загрузить другое фото!"
-			dataFromTlg = SendMessage(t.ChatId, text)
-			break
+
 		}
 
 	}
+	// отправляем файл на машину с преобразователем
+	// отправляем сообщение в push
 
 }

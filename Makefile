@@ -22,7 +22,7 @@ run:
 		-e db_type="postgres" \
 		-e db_host="localhost" \
 		-e db_port=5434 \
-		-e bot_token="YOURE_TOKEN" \
+		-e bot_token="YOUR_TOKEN" \
 		-d $(REGISTRY_IMAGE):latest
 
 push:
