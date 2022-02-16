@@ -1,6 +1,7 @@
 package main
 
 import (
+	"animeGAN2go/Job"
 	"animeGAN2go/handlers"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -8,8 +9,14 @@ import (
 
 func main() {
 
+	// запускаем горутину
+
+	go Job.StartSingleWorker()
+
 	//memcacheClient := memcache.New("127.0.0.1:11211")
 	r := mux.NewRouter()
+
+	// запускаем в фоне воркер который в фоне опрашивает очередь на предмет обновлений
 
 	r.HandleFunc("/start", handlers.StarJobAdd)
 

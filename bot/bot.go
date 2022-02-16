@@ -14,7 +14,7 @@ import (
 	"net/http"
 )
 
-func SendPhoto(chatId int, image string) {
+func SendPhoto(chatId int, image string) string {
 	// TODO отрефакторить это
 	bot, err := tgbotapi.NewBotAPI(plugins.Token)
 	if err != nil {
@@ -26,8 +26,20 @@ func SendPhoto(chatId int, image string) {
 		Name:  "picture",
 		Bytes: sEnc,
 	}
-	_, err = bot.Send(tgbotapi.NewPhotoUpload(int64(chatId), photoFileBytes))
 
+	message, _ := bot.Send(tgbotapi.NewPhotoUpload(int64(chatId), photoFileBytes))
+
+	f := *(message.Photo)
+
+	var largerNumber, temp int
+	// TODO найти самый большой элемент и передать его
+	for position, element := range f {
+		if element.FileSize > temp {
+			temp = element.FileSize
+			largerNumber = position
+		}
+	}
+	return f[largerNumber].FileID
 }
 
 func EditMessage(chatId int, text string, messageId int) {
