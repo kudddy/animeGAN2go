@@ -5,6 +5,7 @@ import (
 	"animeGAN2go/bot"
 	"animeGAN2go/ganserv"
 	"animeGAN2go/plugins"
+	"animeGAN2go/plugins/pg"
 	"animeGAN2go/rds"
 	"fmt"
 	"strconv"
@@ -30,8 +31,11 @@ func StartSingleWorker() {
 		var res = rds.Receive("parser_to_transformer")
 
 		chatId := res["chat_id"]
+		userId := res["user_id"]
 
 		chatIdInt, _ := strconv.Atoi(chatId)
+
+		userIdInt, _ := strconv.Atoi(userId)
 
 		if len(res) > 0 {
 			fmt.Println("Получаем сообщение, обрабатываем и отсылаем")
@@ -53,7 +57,7 @@ func StartSingleWorker() {
 
 				// Пока заглушка
 				fmt.Println("Отправляем изображение в модель")
-				d := ganserv.SendImageToModel(image, "version 1 (🔺 stylization, 🔻 robustness)")
+				d := ganserv.SendImageToModel(image, "version 2 (🔺 robustness,🔻 stylization)")
 
 				var dataFromTlg MessageTypes.RespDataTlg
 				if plugins.IsZeroOfUnderlyingType(d) {
@@ -90,7 +94,7 @@ func StartSingleWorker() {
 									f := bot.SendPhoto(chatIdInt, imageString)
 									toQueen[position] = f
 									// TODO сделать запись в базу
-									//pg.InsertCancelAction(t.UserID)
+									pg.InsertCancelAction(userIdInt)
 									break
 								}
 							}

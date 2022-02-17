@@ -11,7 +11,6 @@ var db *gorm.DB
 
 func init() {
 
-
 	dbUri := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", plugins.DbHost,
 		plugins.DbPort, plugins.Username, plugins.DbName, plugins.Password)
 
@@ -29,3 +28,5 @@ func init() {
 func GetDB() *gorm.DB {
 	return db
 }
+
+var postgres = GetDB()

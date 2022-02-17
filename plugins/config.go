@@ -14,3 +14,5 @@ var DbHost = os.Getenv("db_host")
 var DbPort = os.Getenv("db_port")
 
 var Token = os.Getenv("bot_token")
+
+var RedisHost = os.Getenv("redis_host")

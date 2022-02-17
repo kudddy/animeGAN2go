@@ -26,6 +26,14 @@ docker push docker.io/kudddy/animegan2go:latest
 		-d $(REGISTRY_IMAGE):latest
 ```
 
+```
+docker build -t docker.io/kudddy/animegan2go:release-09 --no-cache .
+```
+
+```
+docker push docker.io/kudddy/animegan2go:release-09
+```
+
 роллинг апдейт
 ```
 kubectl set image deployments/shedul-gan-deployment shedulgantest=kudddy/animegan2go:release-03
