@@ -36,8 +36,9 @@ docker push docker.io/kudddy/animegan2go:release-09
 
 роллинг апдейт
 ```
-kubectl set image deployments/shedul-gan-deployment shedulgantest=kudddy/animegan2go:release-03
+kubectl set image deployments/shedul-gan-deployment shedulgan=kudddy/animegan2go:release-10
 ```
+
 ## Кэш
 Для запуска движка требуется memcached, локальная запускается следующей командой:
 ```

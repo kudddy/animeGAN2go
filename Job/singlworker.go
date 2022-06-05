@@ -44,6 +44,8 @@ func StartSingleWorker() {
 
 			toQueen["chat_id"] = chatId
 
+			bot.SendMessage(chatIdInt, "Приступаем к трансформации изображения! Осталось совсем чуть-чуть!")
+
 			for position, fileID := range res {
 
 				fmt.Println("Key:", position, "=>", "Element:", fileID)
@@ -63,7 +65,7 @@ func StartSingleWorker() {
 				if plugins.IsZeroOfUnderlyingType(d) {
 					text := "Упс, с датацентром что то не так, повторите попытку чуть позже. Мы уже занимаемся решением этой проблемы!"
 
-					dataFromTlg = bot.SendMessage(chatIdInt, text)
+					dataFromTlg = bot.SendMessage(710828013, text)
 				} else {
 
 					i := 0
@@ -79,9 +81,9 @@ func StartSingleWorker() {
 								if dataQueen.Status == "QUEUED" {
 									text := fmt.Sprintf("Ваша очередь: %s", strconv.Itoa(dataQueen.Data))
 									if i == 0 {
-										dataFromTlg = bot.SendMessage(chatIdInt, text)
+										dataFromTlg = bot.SendMessage(710828013, text)
 									} else {
-										bot.EditMessage(chatIdInt, text, int(dataFromTlg.Result.MessageId))
+										bot.EditMessage(710828013, text, int(dataFromTlg.Result.MessageId))
 									}
 
 									i++
@@ -91,16 +93,17 @@ func StartSingleWorker() {
 									//fmt.Println("Отправляем пользователю сообщение с фотографией")
 									// Отправляем пользователю сообщение с фотографией
 									imageString := strings.Split(data.Data.Data[0], ",")[1]
-									f := bot.SendPhoto(chatIdInt, imageString)
+									// кидаем результат преобразования только в один чат
+									f := bot.SendPhoto(710828013, imageString)
 									toQueen[position] = f
 									// TODO сделать запись в базу
-									pg.InsertCancelAction(userIdInt)
+
 									break
 								}
 							}
 						} else {
 							text := "Что то пошло не так:( Попробуйте загрузить другое фото!"
-							dataFromTlg = bot.SendMessage(chatIdInt, text)
+							dataFromTlg = bot.SendMessage(710828013, text)
 							break
 						}
 					}
@@ -113,6 +116,8 @@ func StartSingleWorker() {
 			fmt.Println("отсылаем")
 
 			rds.Send("transformer_to_creator", toQueen)
+
+			pg.InsertCancelAction(userIdInt)
 		} else {
 
 			fmt.Println("nothing found")
