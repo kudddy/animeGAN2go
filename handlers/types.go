@@ -30,9 +30,9 @@ type GetModelHash struct {
 // проверяем статус
 
 type DoneData struct {
-	AvgDurations []float32 `json:"avg_durations"`
-	Data         []string  `json:"data"`
-	Duration     []float32 `json:"duration"`
+	AvgDurations float32  `json:"avg_durations"`
+	Data         []string `json:"data"`
+	Duration     float32  `json:"duration"`
 }
 type CheckStatus struct {
 	Data   DoneData `json:"data"`

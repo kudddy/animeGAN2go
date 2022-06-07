@@ -1,6 +1,7 @@
 package main
 
 import (
+	"animeGAN2go/handlers"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -14,6 +15,7 @@ func main() {
 	// запускаем в фоне воркер который в фоне опрашивает очередь на предмет обновлений
 
 	http.Handle("/", r)
+	r.HandleFunc("/start", handlers.Handler)
 
 	http.ListenAndServe(":9000", nil)
 }
