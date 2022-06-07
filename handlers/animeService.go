@@ -17,7 +17,7 @@ func GetQueenNumber(hash string) (CheckStatus, CheckStatusQueen, bool, bool) {
 
 	r := bytes.NewReader(jsonString)
 
-	url := "https://hf.space/gradioiframe/akhaliq/AnimeGANv2/api/queue/status/"
+	url := "https://hf.space/embed/akhaliq/AnimeGANv2/api/predict/"
 
 	//url := "http://0.0.0.0:8080/status/"
 
