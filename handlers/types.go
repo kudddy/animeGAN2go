@@ -102,8 +102,10 @@ type SendDataToTlg struct {
 }
 
 type SendDataToPush struct {
-	Data   []string `json:"data"`
-	Action string   `json:"action"`
+	Data        []string `json:"data"`
+	Action      string   `json:"action"`
+	FnIndex     int      `json:"fn_index"`
+	SessionHash string   `json:"session_hash"`
 }
 
 type SendDataStatus struct {
