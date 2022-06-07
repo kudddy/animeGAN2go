@@ -19,8 +19,6 @@ func GetQueenNumber(hash string) (CheckStatus, CheckStatusQueen, bool, bool) {
 
 	url := "https://hf.space/embed/akhaliq/AnimeGANv2/api/predict/"
 
-	//url := "http://0.0.0.0:8080/status/"
-
 	contentType := "application/json"
 
 	var client http.Client
