@@ -1,4 +1,4 @@
-package MessageTypes
+package handlers
 
 // ответ сервиса
 type CheckTokenResp struct {
@@ -16,7 +16,7 @@ type Result struct {
 	FilePath     string `json:"file_path"`
 }
 
-type GetFilePath struct {
+type TlgFilePath struct {
 	Ok     bool   `json:"ok"`
 	Result Result `json:"result"`
 }
@@ -88,4 +88,24 @@ type CheckJobStatusResp struct {
 	MessageName string
 	Status      string
 	Token       string
+}
+
+type EditDataToTlg struct {
+	Text      string `json:"text"`
+	ChatId    int    `json:"chat_id"`
+	MessageId int    `json:"message_id"`
+}
+
+type SendDataToTlg struct {
+	ChatId int    `json:"chat_id"`
+	Text   string `json:"text"`
+}
+
+type SendDataToPush struct {
+	Data   []string `json:"data"`
+	Action string   `json:"action"`
+}
+
+type SendDataStatus struct {
+	Hash string `json:"hash"`
 }

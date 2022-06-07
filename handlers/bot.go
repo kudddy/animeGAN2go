@@ -1,9 +1,6 @@
-package bot
+package handlers
 
 import (
-	"animeGAN2go/MessageTypes"
-	"animeGAN2go/plugins"
-	"animeGAN2go/structure"
 	"bytes"
 	b64 "encoding/base64"
 	"encoding/json"
@@ -16,7 +13,7 @@ import (
 
 func SendPhoto(chatId int, image string) string {
 	// TODO отрефакторить это
-	bot, err := tgbotapi.NewBotAPI(plugins.Token)
+	bot, err := tgbotapi.NewBotAPI(Token)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -43,9 +40,9 @@ func SendPhoto(chatId int, image string) string {
 }
 
 func EditMessage(chatId int, text string, messageId int) {
-	url := "https://api.telegram.org/bot" + plugins.Token + "/editMessageText"
+	url := "https://api.telegram.org/bot" + Token + "/editMessageText"
 
-	d := &structure.EditDataToTlg{ChatId: chatId, Text: text, MessageId: messageId}
+	d := &EditDataToTlg{ChatId: chatId, Text: text, MessageId: messageId}
 
 	jsonString, err := json.Marshal(d)
 
@@ -65,7 +62,7 @@ func EditMessage(chatId int, text string, messageId int) {
 }
 
 func GetImage(path string) string {
-	url := "https://api.telegram.org/file/bot" + plugins.Token + "/" + path
+	url := "https://api.telegram.org/file/bot" + Token + "/" + path
 
 	var client http.Client
 	resp, err := client.Get(url)
@@ -88,7 +85,7 @@ func GetImage(path string) string {
 
 func GetFilePath(token string) string {
 	// отправляем запрос на получение файла
-	url := "https://api.telegram.org/bot" + plugins.Token + "/getFile?file_id=" + token
+	url := "https://api.telegram.org/bot" + Token + "/getFile?file_id=" + token
 	var client http.Client
 	resp, err := client.Get(url)
 	if err != nil {
@@ -96,7 +93,7 @@ func GetFilePath(token string) string {
 	}
 	defer resp.Body.Close()
 
-	var data MessageTypes.GetFilePath
+	var data TlgFilePath
 
 	if resp.StatusCode == http.StatusOK {
 
@@ -111,13 +108,13 @@ func GetFilePath(token string) string {
 	return "-1"
 }
 
-func SendMessage(chatId int, text string) MessageTypes.RespDataTlg {
+func SendMessage(chatId int, text string) RespDataTlg {
 
-	var respData MessageTypes.RespDataTlg
+	var respData RespDataTlg
 
-	url := "https://api.telegram.org/bot" + plugins.Token + "/sendMessage"
+	url := "https://api.telegram.org/bot" + Token + "/sendMessage"
 
-	d := &structure.SendDataToTlg{ChatId: chatId, Text: text}
+	d := &SendDataToTlg{ChatId: chatId, Text: text}
 
 	jsonString, err := json.Marshal(d)
 

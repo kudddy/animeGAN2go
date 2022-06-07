@@ -1,8 +1,6 @@
-package ganserv
+package handlers
 
 import (
-	"animeGAN2go/MessageTypes"
-	"animeGAN2go/structure"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -11,9 +9,9 @@ import (
 	"net/http"
 )
 
-func GetQueenNumber(hash string) (MessageTypes.CheckStatus, MessageTypes.CheckStatusQueen, bool, bool) {
+func GetQueenNumber(hash string) (CheckStatus, CheckStatusQueen, bool, bool) {
 
-	d := &structure.SendDataStatus{Hash: hash}
+	d := &SendDataStatus{Hash: hash}
 
 	jsonString, err := json.Marshal(d)
 
@@ -28,9 +26,9 @@ func GetQueenNumber(hash string) (MessageTypes.CheckStatus, MessageTypes.CheckSt
 	var client http.Client
 	resp, err := client.Post(url, contentType, r)
 	// для готово результата модели
-	var data MessageTypes.CheckStatus
+	var data CheckStatus
 	// для очереди
-	var dataQueen MessageTypes.CheckStatusQueen
+	var dataQueen CheckStatusQueen
 
 	var queen bool
 
@@ -66,7 +64,7 @@ func GetQueenNumber(hash string) (MessageTypes.CheckStatus, MessageTypes.CheckSt
 
 }
 
-func SendImageToModel(sEncPhoto string, userModel string) MessageTypes.GetModelHash {
+func SendImageToModel(sEncPhoto string, userModel string) GetModelHash {
 
 	var arr []string
 	arr = append(arr, "data:image/jpeg;base64,"+sEncPhoto)
@@ -75,7 +73,7 @@ func SendImageToModel(sEncPhoto string, userModel string) MessageTypes.GetModelH
 
 	arr = append(arr, userModel)
 
-	d := &structure.SendDataToPush{Data: arr, Action: "predict"}
+	d := &SendDataToPush{Data: arr, Action: "predict"}
 
 	jsonString, err := json.Marshal(d)
 	if err != nil {
@@ -91,7 +89,7 @@ func SendImageToModel(sEncPhoto string, userModel string) MessageTypes.GetModelH
 	contentType := "application/json"
 	resp, err := client.Post(url, contentType, r)
 
-	var data MessageTypes.GetModelHash
+	var data GetModelHash
 	if err != nil {
 		fmt.Println("ошибка при отправлке запроса в модель")
 		log.Fatal(err)
