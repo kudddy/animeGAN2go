@@ -17,7 +17,7 @@ func GetQueenNumber(hash string) (CheckStatus, CheckStatusQueen, bool, bool) {
 
 	r := bytes.NewReader(jsonString)
 
-	url := "https://hf.space/embed/akhaliq/AnimeGANv2/api/queue/push/"
+	url := "https://hf.space/embed/akhaliq/AnimeGANv2/api/queue/status/"
 
 	contentType := "application/json"
 
@@ -80,7 +80,7 @@ func SendImageToModel(sEncPhoto string, userModel string) GetModelHash {
 
 	r := bytes.NewReader(jsonString)
 
-	url := "https://hf.space/gradioiframe/akhaliq/AnimeGANv2/api/queue/push/"
+	url := "https://hf.space/embed/akhaliq/AnimeGANv2/api/queue/push/"
 	//url:= "http://0.0.0.0:8080/push/"
 
 	var client http.Client
