@@ -19,10 +19,8 @@ const (
 
 const API_URL = "https://api.telegram.org/bot"
 
-const BOT_TOKEN = "888186754:AAEEVzV9tHt9vQIiRPBNzCMWI-ekn11_PdA"
-
 func BuildUrl(param string) string {
-	return API_URL + BOT_TOKEN + param
+	return API_URL + BotsInfo["bot"] + param
 }
 
 func sendJson(urlPath string, outData interface{}) error {
