@@ -5,25 +5,26 @@ import (
 	"time"
 )
 
-type sessionData struct {
-	sessionId string
-	botStatus bool
-}
-
 type Dictionary map[string]struct {
+	MessageId int
 	sessionId string
 	botStatus bool
 }
 
 var BotsInfo = map[string]string{
-	"bot":      "888186754:AAEEVzV9tHt9vQIiRPBNzCMWI-ekn11_PdA",
-	"operator": "5409018161:AAE7hHy1C3cbmiNAvTTpT59AVYNH1_nFAVQ",
+	"bot":      "***",
+	"operator": "***",
 }
 
 // CACHE SYSTEM
+type sessionData struct {
+	sessionId string
+	botStatus bool
+	messageId int
+}
 
 type item struct {
-	value      string
+	value      sessionData
 	lastAccess int64
 }
 
@@ -52,18 +53,41 @@ func (m *TTLMap) Len() int {
 	return len(m.m)
 }
 
-func (m *TTLMap) Put(k, v string) {
+func (m *TTLMap) IterMid(k string) {
 	m.l.Lock()
-	it, ok := m.m[k]
-	if !ok {
-		it = &item{value: v}
+	if it, ok := m.m[k]; ok {
+		it.value.messageId = +1
+		m.m[k] = it
+
+	}
+	m.l.Unlock()
+
+	return
+}
+
+func (m *TTLMap) ChangeBotStatus(k string) {
+	m.l.Lock()
+	if it, ok := m.m[k]; ok {
+		it.value.botStatus = false
 		m.m[k] = it
 	}
+	m.l.Unlock()
+
+	return
+}
+
+func (m *TTLMap) Put(k string, v sessionData) {
+	m.l.Lock()
+	it, _ := m.m[k]
+
+	it = &item{value: v}
+	m.m[k] = it
+
 	it.lastAccess = time.Now().Unix()
 	m.l.Unlock()
 }
 
-func (m *TTLMap) Get(k string) (v string, found bool) {
+func (m *TTLMap) Get(k string) (v sessionData, found bool) {
 	m.l.Lock()
 	if it, ok := m.m[k]; ok {
 		v = it.value

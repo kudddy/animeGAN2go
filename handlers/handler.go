@@ -4,60 +4,66 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 )
 
 const urlPathToSkill = "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/cGnGPZWb:45c9c4e54edfcf2cfe505f84e3f338185a334e42"
 
-func generatePayloadForSm(text string) ReqToSmType {
+func policyTlgSm(update UpdateType, sessionId string, messageId int) error {
 
-	messageID := 45345345
-	sessionId := "avaya-lolo-fdsfsdfaf-fsdfasdfsdf"
-	messageName := "MESSAGE_TO_SKILL"
+	// convert message to sm
+	reqToSm := generatePayloadForSm(update.Message.Text, sessionId, messageId)
 
-	userUuid := Uuid{
-		UserId:      "9485D45E-466E-4852-B5DA-1A27DFF5EFC8",
-		Sub:         "1hkmItxUo6BDBmNvGM7inj4kNvWIRyQOaUzWdlqxYafPUqNZ/fTLMJ8M4idi1y467byHIwH8zAnbqt6glUevV0d8+tppO2Ysr1Ryn5PPj7nkk+7kTtDC1MnJvZVaJP3uzHxG5PPxvQpIbtQccKxegw==",
-		UserChannel: "SBOL",
+	// send message to sm and get resp
+	resp, err := sendReqToSm(urlPathToSkill, reqToSm)
+	if err != nil {
+		log.Printf("Someting wrong with request to SM with mid - %d", messageId)
+
+	}
+	// convert message to tlg format
+	var textToUser string
+
+	if resp.MessageName == "ANSWER_TO_USER" {
+		textToUser = resp.Payload.PronounceText
+	} else if resp.MessageName == "NOTHING_FOUND" {
+
+		CacheSystem.ChangeBotStatus(string(rune(update.Message.User.Id)))
+
+		textToUser = "Переадресую на оператора"
 	}
 
-	appInfo := appInfo{
-		ProjectId:       "12f20e40-efc6-4ff5-9179-f5c51f7197b3",
-		ApplicationId:   "7aa5ae84-c668-4e24-94d8-e35cf053e7a1",
-		AppversionId:    "bbddbed8-a8c6-483f-99b5-516dbae4ea70",
-		FrontendType:    "DIALOG",
-		AgeLimit:        18,
-		AffiliationType: "ECOSYSTEM",
+	reqToTlg := OutMessage{
+		Text:   textToUser,
+		ChatId: update.Message.Chat.Id,
 	}
 
-	message := message{
-		OriginalText:                    text,
-		NormalizedText:                  text,
-		OriginalMessageName:             "MESSAGE_FROM_USER",
-		HumanNormalizedText:             text,
-		HumanNormalizedTextWithAnaphora: text,
+	// send req to tlg
+
+	err = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+
+	if err != nil {
+		log.Printf("Someting wrong with request to tlg")
+		log.Print(err)
+		return err
 	}
 
-	payload := payload{
-		Intent:         "sberauto_main",
-		OriginalIntent: "food",
-		NewSession:     false,
-		ApplicationId:  "7aa5ae84-c668-4e24-94d8-e35cf053e7a1",
-		AppversionId:   "bbddbed8-a8c6-483f-99b5-516dbae4ea70",
-		ProjectName:    "СберАвто. Подбор автомобиля",
-		AppInfo:        appInfo,
-		Msg:            message,
+	return nil
+
+}
+
+func policyOperatorBot(update UpdateType) error {
+	reqToTlg := OutMessage{
+		Text:   update.Message.Text,
+		ChatId: update.Message.Chat.Id,
 	}
-
-	reqToSmType := ReqToSmType{
-		MessageId:   messageID,
-		SessionId:   sessionId,
-		MessageName: messageName,
-		Payload:     payload,
-		Uuid:        userUuid,
+	// send req to tlg
+	err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
+	if err != nil {
+		log.Printf("Someting wrong with request to tlg")
+		log.Print(err)
+		return err
 	}
-
-	return reqToSmType
-
+	return nil
 }
 
 // Метод Handler. Данный метод будет обрабатывать HTTP запросы поступающие к функции
@@ -77,48 +83,30 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check cache
-
-	val, check := CacheSystem.Get(string(rune(update.Message.User.Id)))
-
+	cache, check := CacheSystem.Get(string(rune(update.Message.User.Id)))
 	// проверяем кэш
 	if check {
 		//если есть, то смотрим что лежит внутри
 		// достаем сессию
 		//достаем флаг редиректа на оператора, если флаг == true, отсылаем запрос в бот оператора
+		if cache.botStatus {
+			_ = policyTlgSm(update, cache.sessionId, cache.messageId)
+		} else {
+			_ = policyOperatorBot(update)
+		}
 	} else {
 		// создаем новые сессионные данные
+		session := "bot-" + time.Now().Format("20060102150405")
+		CacheSystem.Put(string(rune(update.Message.User.Id)), sessionData{
+			messageId: 0,
+			sessionId: session,
+			botStatus: true,
+		})
+		_ = policyTlgSm(update, session, 0)
 	}
 
 	// Логирование входящего запроса
 	log.Printf("Request received: %s\nMethod: %s", update.Message.Text, r.Method)
-
-	// convert message to sm
-	reqToSm := generatePayloadForSm(update.Message.Text)
-
-	// send message to sm and get resp
-	resp, _ := sendReqToSm(urlPathToSkill, reqToSm)
-
-	// convert message to tlg format
-	var textToUser string
-
-	if resp.MessageName == "ANSWER_TO_USER" {
-		textToUser = resp.Payload.PronounceText
-	} else if resp.MessageName == "NOTHING_FOUND" {
-		textToUser = "Переадресую на оператора"
-	}
-
-	reqToTlg := OutMessage{
-		Text:   textToUser,
-		ChatId: update.Message.Chat.Id,
-	}
-
-	// send req to tlg
-
-	err = sendReqToTlg(BuildUrl(PathSendMessage), reqToTlg)
-
-	if err != nil {
-		log.Printf("Someting wrong with request to tlg")
-	}
 
 	var workerStatus RespByServ
 
@@ -134,5 +122,4 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 
 	// get message from tlg
-
 }

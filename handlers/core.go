@@ -27,7 +27,6 @@ func sendReqToSm(urlPath string, outData ReqToSmType) (RespFromSmType, error) {
 
 	defer response.Body.Close()
 
-
 	if response.StatusCode == http.StatusOK {
 		fmt.Println("Все ок, код положительный")
 		decoder := json.NewDecoder(response.Body)
@@ -39,7 +38,7 @@ func sendReqToSm(urlPath string, outData ReqToSmType) (RespFromSmType, error) {
 	}
 }
 
-func sendReqToTlg(urlPath string, outData OutMessage) (error) {
+func sendReqToTlg(urlPath string, outData OutMessage) error {
 
 	var data RespFromSmType
 
@@ -58,14 +57,13 @@ func sendReqToTlg(urlPath string, outData OutMessage) (error) {
 
 	defer response.Body.Close()
 
-
 	if response.StatusCode == http.StatusOK {
 		fmt.Println("Все ок, код положительный")
 		decoder := json.NewDecoder(response.Body)
 
 		err = decoder.Decode(&data)
 
-		return  nil
+		return nil
 	} else {
 		//  TODO it is bug
 		return nil
