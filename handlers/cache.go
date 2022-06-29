@@ -18,9 +18,10 @@ var BotsInfo = map[string]string{
 
 // CACHE SYSTEM
 type sessionData struct {
-	sessionId string
-	botStatus bool
-	messageId int
+	sessionId       string
+	botStatus       bool
+	messageId       int
+	companionUserId int
 }
 
 type item struct {

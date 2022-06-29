@@ -27,6 +27,30 @@ func policyTlgSm(update UpdateType, sessionId string, messageId int) error {
 		textToUser = resp.Payload.PronounceText
 	} else if resp.MessageName == "NOTHING_FOUND" {
 
+		// in this place we should get from db user_id with max score
+
+		var operatorBotId = 81432612
+
+		// and create new session data for bot
+
+		session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
+
+		// create session id for bot
+		CacheSystem.Put(string(rune(operatorBotId)), sessionData{
+			messageId:       0,
+			sessionId:       session.sessionId,
+			botStatus:       session.botStatus,
+			companionUserId: update.Message.User.Id,
+		})
+
+		// update user session param as companionUserId
+		CacheSystem.Put(string(rune(update.Message.User.Id)), sessionData{
+			messageId:       session.messageId,
+			sessionId:       session.sessionId,
+			botStatus:       session.botStatus,
+			companionUserId: operatorBotId,
+		})
+
 		CacheSystem.ChangeBotStatus(string(rune(update.Message.User.Id)))
 
 		textToUser = "Переадресую на оператора"
@@ -51,18 +75,41 @@ func policyTlgSm(update UpdateType, sessionId string, messageId int) error {
 
 }
 
-func policyOperatorBot(update UpdateType) error {
+func policyOperatorBot(update UpdateType, path string) error {
 	reqToTlg := OutMessage{
 		Text:   update.Message.Text,
 		ChatId: update.Message.Chat.Id,
 	}
-	// send req to tlg
-	err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
-	if err != nil {
-		log.Printf("Someting wrong with request to tlg")
-		log.Print(err)
-		return err
+
+	if path == "/operator" {
+
+		session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
+
+		reqToTlg := OutMessage{
+			Text:   update.Message.Text,
+			ChatId: session.companionUserId,
+		}
+
+		// send req to tlg
+		err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+
+		if err != nil {
+			log.Printf("Someting wrong with request to tlg")
+			log.Print(err)
+			return err
+		}
+
+	} else {
+		// send req to tlg
+		err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
+		if err != nil {
+			log.Printf("Someting wrong with request to tlg")
+			log.Print(err)
+			return err
+		}
+
 	}
+
 	return nil
 }
 
@@ -95,7 +142,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if cache.botStatus {
 			_ = policyTlgSm(update, cache.sessionId, cache.messageId)
 		} else {
-			_ = policyOperatorBot(update)
+			_ = policyOperatorBot(update, r.URL.Path)
 		}
 	} else {
 		// создаем новые сессионные данные
