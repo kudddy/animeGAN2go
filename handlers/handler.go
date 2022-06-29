@@ -82,6 +82,9 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
+	// Логирование входящего запроса
+	log.Printf("Request received: %s\nMethod: %s\nPATH: %s\nRAW_PATH: %s\nRAW_QUERY:%s", update.Message.Text, r.Method, r.URL.Path, r.URL.RawPath, r.URL.RawQuery)
+
 	// check cache
 	cache, check := CacheSystem.Get(string(rune(update.Message.User.Id)))
 	// проверяем кэш
@@ -104,9 +107,6 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		})
 		_ = policyTlgSm(update, session, 0)
 	}
-
-	// Логирование входящего запроса
-	log.Printf("Request received: %s\nMethod: %s", update.Message.Text, r.Method)
 
 	var workerStatus RespByServ
 
