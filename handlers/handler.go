@@ -170,7 +170,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		// достаем сессию
 		//достаем флаг редиректа на оператора, если флаг == true, отсылаем запрос в бот оператора
 		if cache.botStatus {
-			_ = policyTlgSm(update)
+			if r.URL.Path != "/operator" {
+				_ = policyTlgSm(update)
+			}
+
 		} else {
 			_ = policyOperatorBot(update, r.URL.Path)
 		}
