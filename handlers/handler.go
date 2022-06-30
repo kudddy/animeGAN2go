@@ -9,15 +9,17 @@ import (
 
 const urlPathToSkill = "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/cGnGPZWb:45c9c4e54edfcf2cfe505f84e3f338185a334e42"
 
-func policyTlgSm(update UpdateType, sessionId string, messageId int) error {
+func policyTlgSm(update UpdateType) error {
+
+	session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
 
 	// convert message to sm
-	reqToSm := generatePayloadForSm(update.Message.Text, sessionId, messageId)
+	reqToSm := generatePayloadForSm(update.Message.Text, session.sessionId, session.messageId)
 
 	// send message to sm and get resp
 	resp, err := sendReqToSm(urlPathToSkill, reqToSm)
 	if err != nil {
-		log.Printf("Someting wrong with request to SM with mid - %d", messageId)
+		log.Printf("Someting wrong with request to SM with mid - %d", session.messageId)
 
 	}
 	// convert message to tlg format
@@ -33,7 +35,7 @@ func policyTlgSm(update UpdateType, sessionId string, messageId int) error {
 
 		// and create new session data for bot
 
-		session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
+		//session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
 
 		// create session id for bot
 		CacheSystem.Put(string(rune(operatorBotId)), sessionData{
@@ -113,6 +115,34 @@ func policyOperatorBot(update UpdateType, path string) error {
 	return nil
 }
 
+//func behaviour (update UpdateType, path string){
+//
+//	cache, check := CacheSystem.Get(string(rune(update.Message.User.Id)))
+//
+//	if check {
+//		//если есть, то смотрим что лежит внутри
+//		// достаем сессию
+//		//достаем флаг редиректа на оператора, если флаг == true, отсылаем запрос в бот оператора
+//		if cache.botStatus {
+//			_ = policyTlgSm(update, path)
+//		} else {
+//			_ = policyOperatorBot(update, r.URL.Path)
+//		}
+//	} else {
+//		// создаем новые сессионные данные
+//		session := "bot-" + time.Now().Format("20060102150405")
+//		CacheSystem.Put(string(rune(update.Message.User.Id)), sessionData{
+//			messageId: 0,
+//			sessionId: session,
+//			botStatus: true,
+//		})
+//		_ = policyTlgSm(update, path)
+//	}
+//
+//
+//
+//}
+
 // Метод Handler. Данный метод будет обрабатывать HTTP запросы поступающие к функции
 func Handler(w http.ResponseWriter, r *http.Request) {
 
@@ -140,19 +170,25 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		// достаем сессию
 		//достаем флаг редиректа на оператора, если флаг == true, отсылаем запрос в бот оператора
 		if cache.botStatus {
-			_ = policyTlgSm(update, cache.sessionId, cache.messageId)
+			_ = policyTlgSm(update)
 		} else {
 			_ = policyOperatorBot(update, r.URL.Path)
 		}
 	} else {
-		// создаем новые сессионные данные
-		session := "bot-" + time.Now().Format("20060102150405")
-		CacheSystem.Put(string(rune(update.Message.User.Id)), sessionData{
-			messageId: 0,
-			sessionId: session,
-			botStatus: true,
-		})
-		_ = policyTlgSm(update, session, 0)
+		if r.URL.Path != "/operator" {
+
+			// create new session data
+			session := "bot-" + time.Now().Format("20060102150405")
+			CacheSystem.Put(string(rune(update.Message.User.Id)), sessionData{
+				messageId: 0,
+				sessionId: session,
+				botStatus: true,
+			})
+			_ = policyTlgSm(update)
+
+		}
+		// if we wand use bot for operator, we should else rule
+
 	}
 
 	var workerStatus RespByServ
