@@ -83,6 +83,44 @@ func policyOperatorBot(update UpdateType, path string) error {
 
 		session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
 
+		if update.Message.Text == "Завершить чат" {
+
+			reqToTlg := OutMessage{
+				Text:   "Чат с оператором завершен!😎",
+				ChatId: session.companionUserId,
+			}
+
+			// send req to tlg
+			err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+
+			if err != nil {
+				log.Printf("Someting wrong with request to tlg")
+				log.Print(err)
+				return err
+			}
+
+			reqToTlg = OutMessage{
+				Text:   "Сессия с клиентом завершена!😎",
+				ChatId: update.Message.Chat.Id,
+			}
+
+			// send req to tlg
+			err = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
+
+			if err != nil {
+				log.Printf("Someting wrong with request to tlg")
+				log.Print(err)
+				return err
+			}
+
+			// delete cache from
+
+			CacheSystem.Delete(string(rune(update.Message.User.Id)))
+
+			return nil
+
+		}
+
 		reqToTlg := OutMessage{
 			Text:   update.Message.Text,
 			ChatId: session.companionUserId,
@@ -99,32 +137,32 @@ func policyOperatorBot(update UpdateType, path string) error {
 
 	} else {
 
-		var buttons []InlineKeyboardButton
-
-		buttons = append(buttons, InlineKeyboardButton{
-			"Завершить чат",
-			nil,
-			nil,
-			"close_chat",
-			nil,
-			nil,
-			nil,
-			nil,
-		},
-		)
-
-		var arrayOfByttons [][]InlineKeyboardButton
-
-		arrayOfByttons = append(arrayOfByttons, buttons)
-
-		var inlineButtons = InlineKeyboardMarkup{
-			InlineKeyboard: arrayOfByttons,
-		}
+		//var buttons []InlineKeyboardButton
+		//
+		//buttons = append(buttons, InlineKeyboardButton{
+		//	"Завершить чат",
+		//	nil,
+		//	nil,
+		//	"close_chat",
+		//	nil,
+		//	nil,
+		//	nil,
+		//	nil,
+		//},
+		//)
+		//
+		//var arrayOfByttons [][]InlineKeyboardButton
+		//
+		//arrayOfByttons = append(arrayOfByttons, buttons)
+		//
+		//var inlineButtons = InlineKeyboardMarkup{
+		//	InlineKeyboard: arrayOfByttons,
+		//}
 
 		reqToTlg := OutMessage{
-			Text:        update.Message.Text,
-			ChatId:      update.Message.Chat.Id,
-			ReplyMarkup: &inlineButtons,
+			Text:   update.Message.Text,
+			ChatId: update.Message.Chat.Id,
+			//ReplyMarkup: &inlineButtons,
 		}
 
 		// send req to tlg

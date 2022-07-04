@@ -100,4 +100,10 @@ func (m *TTLMap) Get(k string) (v sessionData, found bool) {
 
 }
 
+func (m *TTLMap) Delete(k string) {
+	m.l.Lock()
+	delete(m.m, k)
+	m.l.Unlock()
+}
+
 var CacheSystem = New(1000, 30)
