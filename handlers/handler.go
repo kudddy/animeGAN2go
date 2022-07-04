@@ -124,7 +124,7 @@ func policyOperatorBot(update UpdateType, path string) error {
 		reqToTlg := OutMessage{
 			Text:        update.Message.Text,
 			ChatId:      update.Message.Chat.Id,
-			ReplyMarkup: inlineButtons,
+			ReplyMarkup: &inlineButtons,
 		}
 
 		// send req to tlg

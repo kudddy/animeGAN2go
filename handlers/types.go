@@ -185,10 +185,10 @@ type InlineKeyboardMarkup struct {
 }
 
 type OutMessage struct {
-	ChatId        int                  `json:"chat_id"`
-	Text          string               `json:"text"`
-	ReplayToMsgId *int                 `json:"reply_to_message_id,omitempty"`
-	ReplyMarkup   InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	ChatId        int                   `json:"chat_id"`
+	Text          string                `json:"text"`
+	ReplayToMsgId *int                  `json:"reply_to_message_id,omitempty"`
+	ReplyMarkup   *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
 }
 
 /**
