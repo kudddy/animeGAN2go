@@ -78,10 +78,6 @@ func policyTlgSm(update UpdateType) error {
 }
 
 func policyOperatorBot(update UpdateType, path string) error {
-	reqToTlg := OutMessage{
-		Text:   update.Message.Text,
-		ChatId: update.Message.Chat.Id,
-	}
 
 	if path == "/operator" {
 
@@ -102,6 +98,35 @@ func policyOperatorBot(update UpdateType, path string) error {
 		}
 
 	} else {
+
+		var buttons []InlineKeyboardButton
+
+		buttons = append(buttons, InlineKeyboardButton{
+			"Завершить чат",
+			nil,
+			nil,
+			"close_chat",
+			nil,
+			nil,
+			nil,
+			nil,
+		},
+		)
+
+		var arrayOfByttons [][]InlineKeyboardButton
+
+		arrayOfByttons = append(arrayOfByttons, buttons)
+
+		var inlineButtons = InlineKeyboardMarkup{
+			InlineKeyboard: arrayOfByttons,
+		}
+
+		reqToTlg := OutMessage{
+			Text:        update.Message.Text,
+			ChatId:      update.Message.Chat.Id,
+			ReplyMarkup: inlineButtons,
+		}
+
 		// send req to tlg
 		err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
 		if err != nil {
@@ -114,34 +139,6 @@ func policyOperatorBot(update UpdateType, path string) error {
 
 	return nil
 }
-
-//func behaviour (update UpdateType, path string){
-//
-//	cache, check := CacheSystem.Get(string(rune(update.Message.User.Id)))
-//
-//	if check {
-//		//если есть, то смотрим что лежит внутри
-//		// достаем сессию
-//		//достаем флаг редиректа на оператора, если флаг == true, отсылаем запрос в бот оператора
-//		if cache.botStatus {
-//			_ = policyTlgSm(update, path)
-//		} else {
-//			_ = policyOperatorBot(update, r.URL.Path)
-//		}
-//	} else {
-//		// создаем новые сессионные данные
-//		session := "bot-" + time.Now().Format("20060102150405")
-//		CacheSystem.Put(string(rune(update.Message.User.Id)), sessionData{
-//			messageId: 0,
-//			sessionId: session,
-//			botStatus: true,
-//		})
-//		_ = policyTlgSm(update, path)
-//	}
-//
-//
-//
-//}
 
 // Метод Handler. Данный метод будет обрабатывать HTTP запросы поступающие к функции
 func Handler(w http.ResponseWriter, r *http.Request) {
@@ -189,9 +186,14 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			})
 			_ = policyTlgSm(update)
 
+		} else {
+			reqToTlg := OutMessage{
+				Text:   "Активный диалогов нет:) Отдыхайте!😍",
+				ChatId: update.Message.Chat.Id,
+			}
+			// send req to tlg
+			err = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
 		}
-		// if we wand use bot for operator, we should else rule
-
 	}
 
 	var workerStatus RespByServ
