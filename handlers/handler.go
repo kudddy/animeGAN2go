@@ -192,7 +192,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 				ChatId: update.Message.Chat.Id,
 			}
 			// send req to tlg
-			err = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+			err = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
 		}
 	}
 
