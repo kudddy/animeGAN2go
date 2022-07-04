@@ -150,6 +150,8 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 
+	log.Println(decoder)
+
 	var update UpdateType
 	err := decoder.Decode(&update)
 	if err != nil {
