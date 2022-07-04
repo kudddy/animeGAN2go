@@ -175,7 +175,7 @@ type InlineKeyboardButton struct {
 	// NOTE: This type of button must always be the first button in the first row.
 	//
 	// optional
-	Pay bool `json:"pay,omitempty"`
+	Pay *bool `json:"pay,omitempty"`
 }
 
 type InlineKeyboardMarkup struct {
