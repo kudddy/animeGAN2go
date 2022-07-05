@@ -37,6 +37,8 @@ func policyTlgSm(update UpdateType) error {
 
 		//session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
 
+		log.Printf("save session parametrs for operator when id is %d, companion id is %d", operatorBotId, update.Message.User.Id)
+
 		// create session id for bot
 		CacheSystem.Put(string(rune(operatorBotId)), sessionData{
 			messageId:       0,
@@ -45,6 +47,7 @@ func policyTlgSm(update UpdateType) error {
 			companionUserId: update.Message.User.Id,
 		})
 
+		log.Printf("save session parametrs for bot when id is %d, companion id is %d", update.Message.User.Id, operatorBotId)
 		// update user session param as companionUserId
 		CacheSystem.Put(string(rune(update.Message.User.Id)), sessionData{
 			messageId:       session.messageId,
@@ -121,6 +124,8 @@ func policyOperatorBot(update UpdateType, path string) error {
 
 		}
 
+		log.Printf("operator with id - %d send message to user with id - %d", update.Message.User.Id, session.companionUserId)
+
 		reqToTlg := OutMessage{
 			Text:   update.Message.Text,
 			ChatId: session.companionUserId,
@@ -141,6 +146,8 @@ func policyOperatorBot(update UpdateType, path string) error {
 			Text:   update.Message.Text,
 			ChatId: session.companionUserId,
 		}
+
+		log.Printf("user with id - %d send message to operator with id - %d", update.Message.User.Id, session.companionUserId)
 
 		// send req to tlg
 		err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
