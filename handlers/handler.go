@@ -178,11 +178,14 @@ func mainPolicy(update UpdateType, path string) {
 	if path == "/operator" {
 		// it is old session?
 		if isOldSession {
+			log.Printf("we in old session for operator")
 			// it is not bot mode? if yes we send text user
 			if !cache.botStatus {
+				log.Printf("bot mode is false for operator")
 				_ = policyOperatorBot(update, path)
 				// if it bot mode, i don't know why operator send text:D
 			} else {
+				log.Printf("bot mode is true for operator")
 
 				reqToTlg := OutMessage{
 					Text:   "Активный диалогов нет:) Отдыхайте!😍",
@@ -193,6 +196,7 @@ func mainPolicy(update UpdateType, path string) {
 			}
 
 		} else {
+			log.Printf("for operator is old session")
 			reqToTlg := OutMessage{
 				Text:   "Активный диалогов нет:) Отдыхайте!😍",
 				ChatId: update.Message.Chat.Id,
@@ -203,12 +207,17 @@ func mainPolicy(update UpdateType, path string) {
 
 	} else {
 		if isOldSession {
+			log.Printf("we in old session for user")
 			if cache.botStatus {
+				log.Printf("bot status is true for user")
 				_ = policyTlgSm(update)
 			} else {
+				log.Printf("bot status is false for user")
 				_ = policyOperatorBot(update, path)
 			}
 		} else {
+
+			log.Printf("for user is new session")
 
 			// create new session data
 			session := "bot-" + time.Now().Format("20060102150405")
