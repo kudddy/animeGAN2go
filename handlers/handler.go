@@ -37,7 +37,7 @@ func policyTlgSm(update UpdateType) error {
 		//session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
 
 		log.Printf("save session parametrs for operator when id is %d, companion id is %d", operatorBotId, update.Message.User.Id)
-
+		// TODO its not true
 		CacheSystem.ChangeBotStatus(update.Message.User.Id)
 
 		// create session id for bot
@@ -126,6 +126,8 @@ func policyOperatorBot(update UpdateType, path string) error {
 			// delete cache from
 
 			CacheSystem.Delete(update.Message.User.Id)
+
+			CacheSystem.Delete(session.companionUserId)
 
 			return nil
 
