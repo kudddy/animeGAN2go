@@ -38,11 +38,13 @@ func policyTlgSm(update UpdateType) error {
 
 		log.Printf("save session parametrs for operator when id is %d, companion id is %d", operatorBotId, update.Message.User.Id)
 
+		CacheSystem.ChangeBotStatus(update.Message.User.Id)
+
 		// create session id for bot
 		CacheSystem.Put(operatorBotId, sessionData{
 			messageId:       0,
 			sessionId:       session.sessionId,
-			botStatus:       session.botStatus,
+			botStatus:       false,
 			companionUserId: update.Message.User.Id,
 		})
 
@@ -51,11 +53,9 @@ func policyTlgSm(update UpdateType) error {
 		CacheSystem.Put(update.Message.User.Id, sessionData{
 			messageId:       session.messageId,
 			sessionId:       session.sessionId,
-			botStatus:       session.botStatus,
+			botStatus:       false,
 			companionUserId: operatorBotId,
 		})
-
-		CacheSystem.ChangeBotStatus(update.Message.User.Id)
 
 		s, _ := CacheSystem.Get(update.Message.User.Id)
 
