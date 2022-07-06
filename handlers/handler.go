@@ -61,7 +61,7 @@ func policyTlgSm(update UpdateType) error {
 
 		log.Printf("session parameters from cache for %d is %d", update.Message.User.Id, s.companionUserId)
 
-		d, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
+		d, _ := CacheSystem.Get(string(rune(operatorBotId)))
 
 		log.Printf("session parameters from cache for %d is %d", operatorBotId, d.companionUserId)
 
