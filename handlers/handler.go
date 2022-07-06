@@ -11,7 +11,7 @@ const urlPathToSkill = "https://smartapp-code.sberdevices.ru/chatadapter/chatapi
 
 func policyTlgSm(update UpdateType) error {
 
-	session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
+	session, _ := CacheSystem.Get(update.Message.User.Id)
 
 	// convert message to sm
 	reqToSm := generatePayloadForSm(update.Message.Text, session.sessionId, session.messageId)
@@ -39,7 +39,7 @@ func policyTlgSm(update UpdateType) error {
 		log.Printf("save session parametrs for operator when id is %d, companion id is %d", operatorBotId, update.Message.User.Id)
 
 		// create session id for bot
-		CacheSystem.Put(string(rune(operatorBotId)), sessionData{
+		CacheSystem.Put(operatorBotId, sessionData{
 			messageId:       0,
 			sessionId:       session.sessionId,
 			botStatus:       session.botStatus,
@@ -48,20 +48,20 @@ func policyTlgSm(update UpdateType) error {
 
 		log.Printf("save session parametrs for bot when id is %d, companion id is %d", update.Message.User.Id, operatorBotId)
 		// update user session param as companionUserId
-		CacheSystem.Put(string(rune(update.Message.User.Id)), sessionData{
+		CacheSystem.Put(update.Message.User.Id, sessionData{
 			messageId:       session.messageId,
 			sessionId:       session.sessionId,
 			botStatus:       session.botStatus,
 			companionUserId: operatorBotId,
 		})
 
-		CacheSystem.ChangeBotStatus(string(rune(update.Message.User.Id)))
+		CacheSystem.ChangeBotStatus(update.Message.User.Id)
 
-		s, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
+		s, _ := CacheSystem.Get(update.Message.User.Id)
 
 		log.Printf("session parameters from cache for %d is %d", update.Message.User.Id, s.companionUserId)
 
-		d, _ := CacheSystem.Get(string(rune(operatorBotId)))
+		d, _ := CacheSystem.Get(operatorBotId)
 
 		log.Printf("session parameters from cache for %d is %d", operatorBotId, d.companionUserId)
 
@@ -89,7 +89,7 @@ func policyTlgSm(update UpdateType) error {
 
 func policyOperatorBot(update UpdateType, path string) error {
 
-	session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
+	session, _ := CacheSystem.Get(update.Message.User.Id)
 
 	if path == "/operator" {
 
@@ -125,7 +125,7 @@ func policyOperatorBot(update UpdateType, path string) error {
 
 			// delete cache from
 
-			CacheSystem.Delete(string(rune(update.Message.User.Id)))
+			CacheSystem.Delete(update.Message.User.Id)
 
 			return nil
 
@@ -172,7 +172,7 @@ func policyOperatorBot(update UpdateType, path string) error {
 func mainPolicy(update UpdateType, path string) {
 
 	// check cache
-	cache, isOldSession := CacheSystem.Get(string(rune(update.Message.User.Id)))
+	cache, isOldSession := CacheSystem.Get(update.Message.User.Id)
 
 	// if request from operator bot
 	if path == "/operator" {
@@ -212,7 +212,7 @@ func mainPolicy(update UpdateType, path string) {
 
 			// create new session data
 			session := "bot-" + time.Now().Format("20060102150405")
-			CacheSystem.Put(string(rune(update.Message.User.Id)), sessionData{
+			CacheSystem.Put(update.Message.User.Id, sessionData{
 				messageId: 0,
 				sessionId: session,
 				botStatus: true,
