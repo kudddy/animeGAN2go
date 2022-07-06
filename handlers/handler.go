@@ -20,7 +20,6 @@ func policyTlgSm(update UpdateType) error {
 	resp, err := sendReqToSm(urlPathToSkill, reqToSm)
 	if err != nil {
 		log.Printf("Someting wrong with request to SM with mid - %d", session.messageId)
-
 	}
 	// convert message to tlg format
 	var textToUser string
@@ -56,11 +55,15 @@ func policyTlgSm(update UpdateType) error {
 			companionUserId: operatorBotId,
 		})
 
-		out, _ := json.Marshal(session)
-
-		log.Printf("In policyOperatorBot session data is %s", string(out))
-
 		CacheSystem.ChangeBotStatus(string(rune(update.Message.User.Id)))
+
+		s, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
+
+		log.Printf("session parameters from cache for %d is %d", update.Message.User.Id, s.companionUserId)
+
+		d, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
+
+		log.Printf("session parameters from cache for %d is %d", operatorBotId, d.companionUserId)
 
 		textToUser = "Переадресую на оператора"
 	}
@@ -87,14 +90,6 @@ func policyTlgSm(update UpdateType) error {
 func policyOperatorBot(update UpdateType, path string) error {
 
 	session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
-
-	out, err := json.Marshal(session)
-
-	if err != nil {
-		panic(err)
-	}
-
-	log.Printf("In policyOperatorBot session data is %s", string(out))
 
 	if path == "/operator" {
 
@@ -178,14 +173,6 @@ func mainPolicy(update UpdateType, path string) {
 
 	// check cache
 	cache, isOldSession := CacheSystem.Get(string(rune(update.Message.User.Id)))
-
-	out, err := json.Marshal(cache)
-
-	if err != nil {
-		panic(err)
-	}
-
-	log.Printf("in mainPolicy session data is %s", string(out))
 
 	// if request from operator bot
 	if path == "/operator" {
