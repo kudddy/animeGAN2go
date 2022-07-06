@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"sync"
 	"time"
 )
@@ -79,6 +80,8 @@ func (m *TTLMap) ChangeBotStatus(k string) {
 
 func (m *TTLMap) Put(k string, v sessionData) {
 	m.l.Lock()
+
+	log.Printf("save session parametrs for id is %s, companion id is %d . log from PUT", k, v.companionUserId)
 	it, _ := m.m[k]
 
 	it = &item{value: v}
