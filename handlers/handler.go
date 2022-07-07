@@ -29,46 +29,54 @@ func policyTlgSm(update UpdateType) error {
 	} else if resp.MessageName == "NOTHING_FOUND" {
 
 		// in this place we should get from db user_id with max score
+		operators := CacheSystem.GetRandomAuthOperators()
+		if len(operators) > 0 {
+			// first in, first out
+			var operatorBotId = operators[0]
 
-		var operatorBotId = 81432612
+			operatorSession, _ := CacheSystem.Get(operatorBotId)
 
-		operatorSession, _ := CacheSystem.Get(operatorBotId)
+			// and create new session data for bot
 
-		// and create new session data for bot
+			//session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
 
-		//session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
+			log.Printf("save session parametrs for operator when id is %d, companion id is %d", operatorBotId, update.Message.User.Id)
+			// TODO its not true
+			CacheSystem.ChangeBotStatus(update.Message.User.Id)
 
-		log.Printf("save session parametrs for operator when id is %d, companion id is %d", operatorBotId, update.Message.User.Id)
-		// TODO its not true
-		CacheSystem.ChangeBotStatus(update.Message.User.Id)
+			// create session id for bot
+			CacheSystem.Put(operatorBotId, sessionData{
+				messageId:       0,
+				sessionId:       operatorSession.sessionId,
+				botStatus:       false,
+				companionUserId: update.Message.User.Id,
+				auth:            operatorSession.auth,
+				busy:            true,
+			})
 
-		// create session id for bot
-		CacheSystem.Put(operatorBotId, sessionData{
-			messageId:       0,
-			sessionId:       operatorSession.sessionId,
-			botStatus:       false,
-			companionUserId: update.Message.User.Id,
-			auth:            operatorSession.auth,
-		})
+			log.Printf("save session parametrs for bot when id is %d, companion id is %d", update.Message.User.Id, operatorBotId)
+			// update user session param as companionUserId
+			CacheSystem.Put(update.Message.User.Id, sessionData{
+				messageId:       session.messageId,
+				sessionId:       session.sessionId,
+				botStatus:       false,
+				companionUserId: operatorBotId,
+			})
 
-		log.Printf("save session parametrs for bot when id is %d, companion id is %d", update.Message.User.Id, operatorBotId)
-		// update user session param as companionUserId
-		CacheSystem.Put(update.Message.User.Id, sessionData{
-			messageId:       session.messageId,
-			sessionId:       session.sessionId,
-			botStatus:       false,
-			companionUserId: operatorBotId,
-		})
+			s, _ := CacheSystem.Get(update.Message.User.Id)
 
-		s, _ := CacheSystem.Get(update.Message.User.Id)
+			log.Printf("session parameters from cache for %d is %d", update.Message.User.Id, s.companionUserId)
 
-		log.Printf("session parameters from cache for %d is %d", update.Message.User.Id, s.companionUserId)
+			d, _ := CacheSystem.Get(operatorBotId)
 
-		d, _ := CacheSystem.Get(operatorBotId)
+			log.Printf("session parameters from cache for %d is %d", operatorBotId, d.companionUserId)
 
-		log.Printf("session parameters from cache for %d is %d", operatorBotId, d.companionUserId)
+			textToUser = "Переадресую на оператора❤️"
 
-		textToUser = "Переадресую на оператора"
+		} else {
+			textToUser = "Сейчас все операторы заняты. Пока только бот🏃‍♀️"
+		}
+
 	}
 
 	reqToTlg := OutMessage{
@@ -128,7 +136,7 @@ func policyOperatorBot(update UpdateType, path string) error {
 
 			// delete cache from
 
-			CacheSystem.Delete(update.Message.User.Id)
+			CacheSystem.ChangeBusyStatus(update.Message.User.Id)
 
 			CacheSystem.Delete(session.companionUserId)
 
@@ -186,7 +194,6 @@ func mainPolicy(update UpdateType, path string) {
 			log.Printf("we in old session for operator")
 			if cache.auth {
 				log.Printf("and operator has logging in")
-
 				// it is not bot mode? if yes we send text user
 				if !cache.botStatus {
 					log.Printf("bot mode is false for operator")

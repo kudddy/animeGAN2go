@@ -24,6 +24,7 @@ type sessionData struct {
 	messageId       int
 	companionUserId int
 	auth            bool
+	busy            bool
 }
 
 type item struct {
@@ -89,6 +90,17 @@ func (m *TTLMap) ChangeAuthStatus(k int) {
 	return
 }
 
+func (m *TTLMap) ChangeBusyStatus(k int) {
+	m.l.Lock()
+	if it, ok := m.m[k]; ok {
+		it.value.busy = false
+		m.m[k] = it
+	}
+	m.l.Unlock()
+
+	return
+}
+
 func (m *TTLMap) Put(k int, v sessionData) {
 	m.l.Lock()
 
@@ -112,6 +124,16 @@ func (m *TTLMap) Get(k int) (v sessionData, found bool) {
 	m.l.Unlock()
 	return
 
+}
+
+func (m *TTLMap) GetRandomAuthOperators() []int {
+	var s []int
+	for key, value := range m.m {
+		if value.value.auth && !value.value.busy {
+			s = append(s, key)
+		}
+	}
+	return s
 }
 
 func (m *TTLMap) Delete(k int) {
