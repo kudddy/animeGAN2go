@@ -22,31 +22,3 @@ const API_URL = "https://api.telegram.org/bot"
 func BuildUrl(param string, token string) string {
 	return API_URL + token + param
 }
-
-//func sendJson(urlPath string, outData interface{}) error {
-//	body, err := json.Marshal(outData)
-//	if err != nil {
-//		log.Fatal(err)
-//		return err
-//	}
-//	bodyBytes := bytes.NewBuffer(body)
-//	log.Println(bodyBytes)
-//	_, err = http.Post(BuildUrl(urlPath), "application/json", bodyBytes)
-//	if err != nil {
-//		log.Fatal(err)
-//		return err
-//	}
-//	return nil
-//}
-
-//func SendMessage(msg Message, text string) error {
-//	if text == "" {
-//		text = ">>" + msg.Text
-//	}
-//	outData := OutMessage{
-//		ChatId:        msg.Chat.Id,
-//		Text:          text,
-//		ReplayToMsgId: msg.Id,
-//	}
-//	return sendJson(PathSendMessage, outData)
-//}

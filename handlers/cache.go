@@ -23,6 +23,7 @@ type sessionData struct {
 	botStatus       bool
 	messageId       int
 	companionUserId int
+	auth            bool
 }
 
 type item struct {
@@ -60,7 +61,6 @@ func (m *TTLMap) IterMid(k int) {
 	if it, ok := m.m[k]; ok {
 		it.value.messageId = +1
 		m.m[k] = it
-
 	}
 	m.l.Unlock()
 
@@ -71,6 +71,17 @@ func (m *TTLMap) ChangeBotStatus(k int) {
 	m.l.Lock()
 	if it, ok := m.m[k]; ok {
 		it.value.botStatus = false
+		m.m[k] = it
+	}
+	m.l.Unlock()
+
+	return
+}
+
+func (m *TTLMap) ChangeAuthStatus(k int) {
+	m.l.Lock()
+	if it, ok := m.m[k]; ok {
+		it.value.auth = true
 		m.m[k] = it
 	}
 	m.l.Unlock()
@@ -109,4 +120,4 @@ func (m *TTLMap) Delete(k int) {
 	m.l.Unlock()
 }
 
-var CacheSystem = New(1000, 30)
+var CacheSystem = New(1000, 1000)

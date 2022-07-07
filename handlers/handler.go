@@ -32,6 +32,8 @@ func policyTlgSm(update UpdateType) error {
 
 		var operatorBotId = 81432612
 
+		operatorSession, _ := CacheSystem.Get(operatorBotId)
+
 		// and create new session data for bot
 
 		//session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
@@ -43,9 +45,10 @@ func policyTlgSm(update UpdateType) error {
 		// create session id for bot
 		CacheSystem.Put(operatorBotId, sessionData{
 			messageId:       0,
-			sessionId:       session.sessionId,
+			sessionId:       operatorSession.sessionId,
 			botStatus:       false,
 			companionUserId: update.Message.User.Id,
+			auth:            operatorSession.auth,
 		})
 
 		log.Printf("save session parametrs for bot when id is %d, companion id is %d", update.Message.User.Id, operatorBotId)
@@ -181,30 +184,66 @@ func mainPolicy(update UpdateType, path string) {
 		// it is old session?
 		if isOldSession {
 			log.Printf("we in old session for operator")
-			// it is not bot mode? if yes we send text user
-			if !cache.botStatus {
-				log.Printf("bot mode is false for operator")
-				_ = policyOperatorBot(update, path)
-				// if it bot mode, i don't know why operator send text:D
-			} else {
-				log.Printf("bot mode is true for operator")
+			if cache.auth {
+				log.Printf("and operator has logging in")
 
-				reqToTlg := OutMessage{
-					Text:   "Активный диалогов нет:) Отдыхайте!😍",
-					ChatId: update.Message.Chat.Id,
+				// it is not bot mode? if yes we send text user
+				if !cache.botStatus {
+					log.Printf("bot mode is false for operator")
+					_ = policyOperatorBot(update, path)
+					// if it bot mode, i don't know why operator send text:D
+				} else {
+					log.Printf("bot mode is true for operator")
+
+					reqToTlg := OutMessage{
+						Text:   "Активный диалогов нет:) Отдыхайте!😍",
+						ChatId: update.Message.Chat.Id,
+					}
+					// send req to tlg
+					_ = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
 				}
-				// send req to tlg
-				_ = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
-			}
+			} else {
+				if update.Message.Text == "lolkaperduska" {
+					reqToTlg := OutMessage{
+						Text:   "Вы успешно авторизовались, молодец! Ожидайте диалога с клиентом!😍",
+						ChatId: update.Message.Chat.Id,
+					}
+					// send req to tlg
+					_ = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
 
+					CacheSystem.ChangeAuthStatus(update.Message.User.Id)
+
+				} else {
+
+					reqToTlg := OutMessage{
+						Text:   "Пароль неправильный, попытайтесь еще раз. Будьте старательны👹",
+						ChatId: update.Message.Chat.Id,
+					}
+					// send req to tlg
+					_ = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
+
+				}
+			}
 		} else {
-			log.Printf("for operator is old session")
+			log.Printf("for operator is a new session")
+
+			// in this place i should generate session data for bot and i know that operator not auth
+			// create new session data
+			session := "bot-" + time.Now().Format("20060102150405")
+			CacheSystem.Put(update.Message.User.Id, sessionData{
+				messageId: 0,
+				sessionId: session,
+				botStatus: true,
+				auth:      false,
+			})
+
 			reqToTlg := OutMessage{
-				Text:   "Активный диалогов нет:) Отдыхайте!😍",
+				Text:   "Вы не авторизовались, войдите в систему чтобы начать обслиживать клиентов!😍",
 				ChatId: update.Message.Chat.Id,
 			}
 			// send req to tlg
 			_ = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
+
 		}
 
 	} else {
@@ -218,7 +257,6 @@ func mainPolicy(update UpdateType, path string) {
 				_ = policyOperatorBot(update, path)
 			}
 		} else {
-
 			log.Printf("for user is new session")
 
 			// create new session data
@@ -232,41 +270,6 @@ func mainPolicy(update UpdateType, path string) {
 
 		}
 	}
-
-	//// проверяем кэш
-	//if isOldSession {
-	//	//если есть, то смотрим что лежит внутри
-	//	// достаем сессию
-	//	//достаем флаг редиректа на оператора, если флаг == true, отсылаем запрос в бот оператора
-	//	if cache.botStatus {
-	//		if path != "/operator" {
-	//			_ = policyTlgSm(update)
-	//		}
-	//
-	//	} else {
-	//		_ = policyOperatorBot(update, path)
-	//	}
-	//} else {
-	//	if path != "/operator" {
-	//
-	//		// create new session data
-	//		session := "bot-" + time.Now().Format("20060102150405")
-	//		CacheSystem.Put(string(rune(update.Message.User.Id)), sessionData{
-	//			messageId: 0,
-	//			sessionId: session,
-	//			botStatus: true,
-	//		})
-	//		_ = policyTlgSm(update)
-	//
-	//	} else {
-	//		reqToTlg := OutMessage{
-	//			Text:   "Активный диалогов нет:) Отдыхайте!😍",
-	//			ChatId: update.Message.Chat.Id,
-	//		}
-	//		// send req to tlg
-	//		_ = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
-	//	}
-	//}
 
 }
 
