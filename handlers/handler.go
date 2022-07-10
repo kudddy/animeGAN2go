@@ -23,9 +23,12 @@ func policyTlgSm(update UpdateType) error {
 	}
 	// convert message to tlg format
 	var textToUser string
+	var extraText string
+	var buts []Buttons
 
 	if resp.MessageName == "ANSWER_TO_USER" {
 		textToUser = resp.Payload.PronounceText
+		textToUser, extraText, buts = resp.processRespFromSm()
 	} else if resp.MessageName == "NOTHING_FOUND" {
 
 		// in this place we should get from db user_id with max score
@@ -80,7 +83,7 @@ func policyTlgSm(update UpdateType) error {
 	}
 
 	reqToTlg := OutMessage{
-		Text:   textToUser,
+		Text:   textToUser + "\n" + extraText,
 		ChatId: update.Message.Chat.Id,
 	}
 

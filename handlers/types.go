@@ -306,17 +306,17 @@ type margins struct {
 }
 
 type content struct {
-	Url         string  `json:"url"`
-	Hash        string  `json:"hash"`
-	Width       string  `json:"width"`
-	AspectRatio int     `json:"aspect_ratio"`
-	Text        string  `json:"text"`
-	Typeface    string  `json:"typeface"`
-	TextColor   string  `json:"text_color"`
-	MaxLines    int     `json:"max_lines"`
-	Style       string  `json:"default"`
-	Actions     actions `json:"actions"`
-	Margins     margins `json:"margins"`
+	Url         string    `json:"url"`
+	Hash        string    `json:"hash"`
+	Width       string    `json:"width"`
+	AspectRatio int       `json:"aspect_ratio"`
+	Text        string    `json:"text"`
+	Typeface    string    `json:"typeface"`
+	TextColor   string    `json:"text_color"`
+	MaxLines    int       `json:"max_lines"`
+	Style       string    `json:"default"`
+	Actions     []actions `json:"actions"`
+	Margins     margins   `json:"margins"`
 }
 
 type cell struct {
@@ -328,6 +328,10 @@ type cell struct {
 type card struct {
 	Type  string `json:"type"`
 	Cells []cell `json:"cells"`
+}
+
+type Card struct {
+	Card card `json:"card"`
 }
 
 type payloadForSm struct {
@@ -344,7 +348,7 @@ type payloadForSm struct {
 	AppInfo          appInfo       `json:"app_info"`
 	PronounceText    string        `json:"pronounceText"`
 	Emotion          interface{}   `json:"emotion"`
-	Items            []card        `json:"items"`
+	Items            []Card        `json:"items"`
 	AutoListening    bool          `json:"auto_listening"`
 }
 
@@ -403,5 +407,37 @@ func generatePayloadForSm(text string, sessionId string, messageId int) ReqToSmT
 	}
 
 	return reqToSmType
+
+}
+
+type Buttons struct {
+	text string
+	url  string
+}
+
+func (data *RespFromSmType) processRespFromSm() (string, string, []Buttons) {
+
+	var str string
+	var buttons []Buttons
+	if len(data.Payload.Items) > 0 {
+		if len(data.Payload.Items[0].Card.Cells) > 0 {
+			for _, value := range data.Payload.Items[0].Card.Cells {
+				if value.Type == "text_cell_view" {
+					str += " " + value.Content.Text
+				} else if value.Type == "button_cell_view" {
+					var but = Buttons{
+						text: value.Content.Text,
+						url:  value.Content.Actions[0].DeepLink,
+					}
+					buttons = append(buttons, but)
+				}
+			}
+			return data.Payload.PronounceText, str, buttons
+		} else {
+			return data.Payload.PronounceText, "", buttons
+		}
+	} else {
+		return data.Payload.PronounceText, "", buttons
+	}
 
 }

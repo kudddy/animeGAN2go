@@ -33,7 +33,9 @@ func sendReqToSm(urlPath string, outData ReqToSmType) (RespFromSmType, error) {
 
 		err = decoder.Decode(&data)
 		return data, nil
+
 	} else {
+		// TODO this logic not true
 		return data, nil
 	}
 }
