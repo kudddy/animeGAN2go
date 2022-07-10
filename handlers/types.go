@@ -286,9 +286,9 @@ type strategies struct {
 }
 
 type actions struct {
-	Type     string `json:"left"`
-	Text     string `json:"text"`
-	DeepLink string `json:"deep_link"`
+	Type     string  `json:"left"`
+	Text     string  `json:"text"`
+	DeepLink *string `json:"deep_link"`
 }
 
 type padding struct {
@@ -412,7 +412,7 @@ func generatePayloadForSm(text string, sessionId string, messageId int) ReqToSmT
 
 type Buttons struct {
 	text string
-	url  string
+	url  *string
 }
 
 func (data *RespFromSmType) processRespFromSm() (string, string, []Buttons) {

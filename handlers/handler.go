@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const urlPathToSkill = "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/cGnGPZWb:45c9c4e54edfcf2cfe505f84e3f338185a334e42"
+const urlPathToSkill = "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/ZMgoqvmH:abf05f2ca8543405adad9b5bce52b548496dc2b8"
 
 func policyTlgSm(update UpdateType) error {
 
@@ -27,8 +27,57 @@ func policyTlgSm(update UpdateType) error {
 	var buts []Buttons
 
 	if resp.MessageName == "ANSWER_TO_USER" {
-		textToUser = resp.Payload.PronounceText
+
 		textToUser, extraText, buts = resp.processRespFromSm()
+
+		var reqToTlg OutMessage
+
+		if len(buts) > 0 {
+
+			var buttons []InlineKeyboardButton
+
+			buttons = append(buttons, InlineKeyboardButton{
+				buts[0].text,
+				buts[0].url,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+			},
+			)
+
+			var arrayOfByttons [][]InlineKeyboardButton
+
+			arrayOfByttons = append(arrayOfByttons, buttons)
+
+			var inlineButtons = InlineKeyboardMarkup{
+				InlineKeyboard: arrayOfByttons,
+			}
+
+			reqToTlg = OutMessage{
+				Text:        textToUser + "\n" + extraText,
+				ChatId:      update.Message.Chat.Id,
+				ReplyMarkup: &inlineButtons,
+			}
+		} else {
+			reqToTlg = OutMessage{
+				Text:   textToUser + "\n" + extraText,
+				ChatId: update.Message.Chat.Id,
+			}
+		}
+
+		err = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+
+		if err != nil {
+			log.Printf("Someting wrong with request to tlg")
+			log.Print(err)
+			return err
+		}
+
+		return nil
+
 	} else if resp.MessageName == "NOTHING_FOUND" {
 
 		// in this place we should get from db user_id with max score
@@ -248,7 +297,7 @@ func mainPolicy(update UpdateType, path string) {
 			})
 
 			reqToTlg := OutMessage{
-				Text:   "Вы не авторизовались, войдите в систему чтобы начать обслиживать клиентов!😍",
+				Text:   "Вы не авторизовались, войдите в систему чтобы начать обслуживать клиентов!😍",
 				ChatId: update.Message.Chat.Id,
 			}
 			// send req to tlg
