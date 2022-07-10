@@ -144,7 +144,7 @@ type InlineKeyboardButton struct {
 	// CallbackData data to be sent in a callback query to the bot when button is pressed, 1-64 bytes.
 	//
 	// optional
-	CallbackData string `json:"callback_data,omitempty"`
+	CallbackData *string `json:"callback_data,omitempty"`
 	// SwitchInlineQuery if set, pressing the button will prompt the user to select one of their chats,
 	// open that chat and insert the bot's username and the specified inline query in the input field.
 	// Can be empty, in which case just the bot's username will be inserted.

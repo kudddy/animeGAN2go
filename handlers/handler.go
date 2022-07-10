@@ -36,17 +36,11 @@ func policyTlgSm(update UpdateType) error {
 
 			var buttons []InlineKeyboardButton
 
-			buttons = append(buttons, InlineKeyboardButton{
-				buts[0].text,
-				buts[0].url,
-				nil,
-				nil,
-				nil,
-				nil,
-				nil,
-				nil,
-			},
-			)
+			var inlineKey = InlineKeyboardButton{
+				Text: buts[0].text,
+				URL:  buts[0].url,
+			}
+			buttons = append(buttons, inlineKey)
 
 			var arrayOfByttons [][]InlineKeyboardButton
 
