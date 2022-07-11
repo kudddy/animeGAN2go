@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -51,7 +52,7 @@ func sendReqToTlg(urlPath string, outData OutMessage) error {
 		return err
 	}
 	bodyBytes := bytes.NewBuffer(body)
-	log.Println(bodyBytes)
+
 	response, err := http.Post(urlPath, "application/json", bodyBytes)
 
 	if err != nil {
@@ -61,6 +62,8 @@ func sendReqToTlg(urlPath string, outData OutMessage) error {
 	defer response.Body.Close()
 
 	if response.StatusCode == http.StatusOK {
+		body, _ = ioutil.ReadAll(response.Body)
+		log.Println(string(body))
 		fmt.Println("Все ок, код положительный")
 		decoder := json.NewDecoder(response.Body)
 
