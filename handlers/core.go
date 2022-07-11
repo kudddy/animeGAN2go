@@ -30,6 +30,7 @@ func sendReqToSm(urlPath string, outData ReqToSmType) (RespFromSmType, error) {
 	if response.StatusCode == http.StatusOK {
 		fmt.Println("Все ок, код положительный")
 		decoder := json.NewDecoder(response.Body)
+		log.Println(response.Body)
 
 		err = decoder.Decode(&data)
 		return data, nil
