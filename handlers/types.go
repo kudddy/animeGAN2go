@@ -1,5 +1,7 @@
 package handlers
 
+import "strings"
+
 /**
 | ============== Types ============== |
 */
@@ -223,7 +225,7 @@ type grammemInfo struct {
 }
 
 type tokenizedElements struct {
-	Text             string
+	Text             string      `json:"text"`
 	RawText          string      `json:"raw_text"`
 	GrammemInfo      grammemInfo `json:"grammem_info"`
 	Lemma            string      `json:"lemma"`
@@ -379,12 +381,25 @@ func generatePayloadForSm(text string, sessionId string, messageId int) ReqToSmT
 		AffiliationType: "ECOSYSTEM",
 	}
 
+	var elementsList []tokenizedElements
+
+	for _, word := range strings.Split(text, " ") {
+
+		token := tokenizedElements{
+			Text: word,
+		}
+
+		elementsList = append(elementsList, token)
+
+	}
+
 	message := message{
 		OriginalText:                    text,
 		NormalizedText:                  text,
 		OriginalMessageName:             "MESSAGE_FROM_USER",
 		HumanNormalizedText:             text,
 		HumanNormalizedTextWithAnaphora: text,
+		TokenizedElementsList:           elementsList,
 	}
 
 	payload := payload{

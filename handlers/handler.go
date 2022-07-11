@@ -42,12 +42,12 @@ func policyTlgSm(update UpdateType) error {
 			}
 			buttons = append(buttons, inlineKey)
 
-			var arrayOfByttons [][]InlineKeyboardButton
+			var arrayOfButtons [][]InlineKeyboardButton
 
-			arrayOfByttons = append(arrayOfByttons, buttons)
+			arrayOfButtons = append(arrayOfButtons, buttons)
 
 			var inlineButtons = InlineKeyboardMarkup{
-				InlineKeyboard: arrayOfByttons,
+				InlineKeyboard: arrayOfButtons,
 			}
 
 			reqToTlg = OutMessage{
