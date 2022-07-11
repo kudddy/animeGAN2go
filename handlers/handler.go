@@ -14,7 +14,7 @@ func policyTlgSm(update UpdateType) error {
 	session, _ := CacheSystem.Get(update.Message.User.Id)
 
 	// convert message to sm
-	reqToSm := generatePayloadForSm(update.Message.Text, session.sessionId, session.messageId)
+	reqToSm := generatePayloadForSm(update, session)
 
 	// send message to sm and get resp
 	resp, err := sendReqToSm(urlPathToSkill, reqToSm)
@@ -301,8 +301,13 @@ func mainPolicy(update UpdateType, path string) {
 
 	} else {
 		if isOldSession {
+
 			log.Printf("we in old session for user")
 			if cache.botStatus {
+
+				// change session status
+				CacheSystem.ChangeSessionStatus(update.Message.User.Id)
+
 				log.Printf("bot status is true for user")
 				_ = policyTlgSm(update)
 			} else {
@@ -315,9 +320,10 @@ func mainPolicy(update UpdateType, path string) {
 			// create new session data
 			session := "bot-" + time.Now().Format("20060102150405")
 			CacheSystem.Put(update.Message.User.Id, sessionData{
-				messageId: 0,
-				sessionId: session,
-				botStatus: true,
+				messageId:  0,
+				sessionId:  session,
+				botStatus:  true,
+				newSession: true,
 			})
 			_ = policyTlgSm(update)
 

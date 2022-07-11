@@ -25,6 +25,7 @@ type sessionData struct {
 	companionUserId int
 	auth            bool
 	busy            bool
+	newSession      bool
 }
 
 type item struct {
@@ -134,6 +135,15 @@ func (m *TTLMap) GetRandomAuthOperators() []int {
 		}
 	}
 	return s
+}
+
+func (m *TTLMap) ChangeSessionStatus(k int) {
+	m.l.Lock()
+	if it, ok := m.m[k]; ok {
+		it.value.newSession = false
+		m.m[k] = it
+	}
+	m.l.Unlock()
 }
 
 func (m *TTLMap) Delete(k int) {

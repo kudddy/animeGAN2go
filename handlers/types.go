@@ -362,7 +362,7 @@ type RespFromSmType struct {
 	Payload     payloadForSm `json:"payload"`
 }
 
-func generatePayloadForSm(text string, sessionId string, messageId int) ReqToSmType {
+func generatePayloadForSm(update UpdateType, session sessionData) ReqToSmType {
 
 	messageName := "MESSAGE_TO_SKILL"
 
@@ -383,7 +383,7 @@ func generatePayloadForSm(text string, sessionId string, messageId int) ReqToSmT
 
 	var elementsList []tokenizedElements
 
-	for _, word := range strings.Split(text, " ") {
+	for _, word := range strings.Split(update.Message.Text, " ") {
 
 		token := tokenizedElements{
 			Text: word,
@@ -394,18 +394,18 @@ func generatePayloadForSm(text string, sessionId string, messageId int) ReqToSmT
 	}
 
 	message := message{
-		OriginalText:                    text,
-		NormalizedText:                  text,
+		OriginalText:                    update.Message.Text,
+		NormalizedText:                  update.Message.Text,
 		OriginalMessageName:             "MESSAGE_FROM_USER",
-		HumanNormalizedText:             text,
-		HumanNormalizedTextWithAnaphora: text,
+		HumanNormalizedText:             update.Message.Text,
+		HumanNormalizedTextWithAnaphora: update.Message.Text,
 		TokenizedElementsList:           elementsList,
 	}
 
 	payload := payload{
 		Intent:         "sberauto_main",
 		OriginalIntent: "food",
-		NewSession:     false,
+		NewSession:     session.newSession,
 		ApplicationId:  "7aa5ae84-c668-4e24-94d8-e35cf053e7a1",
 		AppversionId:   "bbddbed8-a8c6-483f-99b5-516dbae4ea70",
 		ProjectName:    "СберАвто. Подбор автомобиля",
@@ -414,8 +414,8 @@ func generatePayloadForSm(text string, sessionId string, messageId int) ReqToSmT
 	}
 
 	reqToSmType := ReqToSmType{
-		MessageId:   messageId,
-		SessionId:   sessionId,
+		MessageId:   session.messageId,
+		SessionId:   session.sessionId,
 		MessageName: messageName,
 		Payload:     payload,
 		Uuid:        userUuid,
