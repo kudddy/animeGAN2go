@@ -411,6 +411,12 @@ func generatePayloadForSm(update UpdateType, session sessionData) ReqToSmType {
 		ProjectName:    "СберАвто. Подбор автомобиля",
 		AppInfo:        appInfo,
 		Msg:            message,
+		Character: character{
+			Id:     "sber",
+			Name:   "Сбер",
+			Gender: "male",
+			Appeal: "official",
+		},
 	}
 
 	reqToSmType := ReqToSmType{

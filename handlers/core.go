@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 )
@@ -31,9 +30,7 @@ func sendReqToSm(urlPath string, outData ReqToSmType) (RespFromSmType, error) {
 	if response.StatusCode == http.StatusOK {
 		fmt.Println("Все ок, код положительный")
 		decoder := json.NewDecoder(response.Body)
-
-		body, _ = ioutil.ReadAll(response.Body)
-		log.Println(string(body))
+		log.Println(response.Body)
 
 		err = decoder.Decode(&data)
 		return data, nil
@@ -64,7 +61,6 @@ func sendReqToTlg(urlPath string, outData OutMessage) error {
 	defer response.Body.Close()
 
 	if response.StatusCode == http.StatusOK {
-
 		fmt.Println("Все ок, код положительный")
 		decoder := json.NewDecoder(response.Body)
 
