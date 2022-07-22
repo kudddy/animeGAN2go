@@ -14,8 +14,9 @@ type Dictionary map[string]struct {
 
 // struct for bot param
 var BotsInfo = map[string]string{
-	"bot":      "***",
-	"operator": "***",
+	"bot":        "***",
+	"operator":   "***",
+	"sm-webhook": "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/ZMgoqvmH:abf05f2ca8543405adad9b5bce52b548496dc2b8",
 }
 
 // CACHE SYSTEM

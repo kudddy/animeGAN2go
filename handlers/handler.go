@@ -18,7 +18,7 @@ func policyTlgSm(update UpdateType, params map[string]string) error {
 	reqToSm := generatePayloadForSm(update, session)
 
 	// send message to sm and get resp
-	resp, err := sendReqToSm(urlPathToSkill, reqToSm)
+	resp, err := sendReqToSm(params["sm-webhook"], reqToSm)
 	if err != nil {
 		log.Printf("Someting wrong with request to SM with mid - %d", session.messageId)
 	}
