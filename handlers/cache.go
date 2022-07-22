@@ -12,6 +12,7 @@ type Dictionary map[string]struct {
 	botStatus bool
 }
 
+// struct for bot param
 var BotsInfo = map[string]string{
 	"bot":      "***",
 	"operator": "***",
@@ -153,3 +154,31 @@ func (m *TTLMap) Delete(k int) {
 }
 
 var CacheSystem = New(1000, 1000)
+
+// CACHE FOR BOT PARAMS BY PROJECT ID
+type botsParams struct {
+	data map[string]map[string]string
+}
+
+func (l *botsParams) GetData(projectIs string) (map[string]string, bool) {
+	d, ok := l.data[projectIs]
+	return d, ok
+}
+
+func (l *botsParams) AddData(projectId string, botData map[string]string) {
+	l.data[projectId] = botData
+}
+
+func (l *botsParams) Init() {
+	l.data = map[string]map[string]string{}
+}
+
+func Init() botsParams {
+	var m botsParams
+	m.Init()
+	// test data, in future we must get it from base
+	m.AddData("7d216f7c-cfee-4b76-a550-1c66a93848c9", BotsInfo)
+	return m
+}
+
+var BotsParams = Init()

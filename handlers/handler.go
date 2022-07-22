@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
 const urlPathToSkill = "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/ZMgoqvmH:abf05f2ca8543405adad9b5bce52b548496dc2b8"
 
-func policyTlgSm(update UpdateType) error {
+func policyTlgSm(update UpdateType, params map[string]string) error {
 
 	session, _ := CacheSystem.Get(update.Message.User.Id)
 
@@ -62,7 +63,7 @@ func policyTlgSm(update UpdateType) error {
 			}
 		}
 
-		err = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+		err = sendReqToTlg(BuildUrl(PathSendMessage, params["bot"]), reqToTlg)
 
 		if err != nil {
 			log.Printf("Someting wrong with request to tlg")
@@ -126,208 +127,218 @@ func policyTlgSm(update UpdateType) error {
 	}
 
 	reqToTlg := OutMessage{
-		Text:   textToUser + "\n" + extraText,
+		Text:   textToUser,
 		ChatId: update.Message.Chat.Id,
 	}
 
 	// send req to tlg
 
-	err = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+	err = sendReqToTlg(BuildUrl(PathSendMessage, params["bot"]), reqToTlg)
 
 	if err != nil {
 		log.Printf("Someting wrong with request to tlg")
 		log.Print(err)
 		return err
 	}
-
 	return nil
-
 }
 
-func policyOperatorBot(update UpdateType, path string) error {
+func policyOperator(update UpdateType, params map[string]string) error {
 
-	session, _ := CacheSystem.Get(update.Message.User.Id)
+	session, isOldSession := CacheSystem.Get(update.Message.User.Id)
 
-	if path == "/operator" {
+	if isOldSession {
+		log.Printf("we in old session for operator")
+		if session.auth {
+			log.Printf("and operator has logging in")
+			// it is not bot mode? if yes we send text user
+			if !session.botStatus {
+				log.Printf("bot mode is false for operator")
 
-		if update.Message.Text == "Завершить чат" {
+				if update.Message.Text == "Завершить чат" {
+
+					reqToTlg := OutMessage{
+						Text:   "Чат с оператором завершен!😎",
+						ChatId: session.companionUserId,
+					}
+
+					// send req to tlg
+					err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+
+					if err != nil {
+						log.Printf("Someting wrong with request to tlg")
+						log.Print(err)
+						return err
+					}
+
+					reqToTlg = OutMessage{
+						Text:   "Сессия с клиентом завершена!😎",
+						ChatId: update.Message.Chat.Id,
+					}
+
+					// send req to tlg
+					err = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
+
+					if err != nil {
+						log.Printf("Someting wrong with request to tlg")
+						log.Print(err)
+						return err
+					}
+
+					// delete cache from
+
+					CacheSystem.ChangeBusyStatus(update.Message.User.Id)
+
+					CacheSystem.Delete(session.companionUserId)
+
+					return nil
+
+				}
+
+				log.Printf("operator with id - %d send message to user with id - %d", update.Message.User.Id, session.companionUserId)
+
+				reqToTlg := OutMessage{
+					Text:   update.Message.Text,
+					ChatId: session.companionUserId,
+				}
+
+				// send req to tlg
+				err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+
+				if err != nil {
+					log.Printf("Someting wrong with request to tlg")
+					log.Print(err)
+					return err
+				}
+
+				// _ = policyOperatorBot(update, botType)
+
+				// if it bot mode, i don't know why operator send text:D
+			} else {
+				log.Printf("bot mode is true for operator")
+
+				reqToTlg := OutMessage{
+					Text:   "Активный диалогов нет:) Отдыхайте!😍",
+					ChatId: update.Message.Chat.Id,
+				}
+				// send req to tlg
+				_ = sendReqToTlg(BuildUrl(PathSendMessage, params["operator"]), reqToTlg)
+			}
+		} else {
+			if update.Message.Text == "pass" {
+				reqToTlg := OutMessage{
+					Text:   "Вы успешно авторизовались, молодец! Ожидайте диалога с клиентом!😍",
+					ChatId: update.Message.Chat.Id,
+				}
+				// send req to tlg
+				_ = sendReqToTlg(BuildUrl(PathSendMessage, params["operator"]), reqToTlg)
+
+				CacheSystem.ChangeAuthStatus(update.Message.User.Id)
+
+			} else {
+
+				reqToTlg := OutMessage{
+					Text:   "Пароль неправильный, попытайтесь еще раз. Будьте старательны👹",
+					ChatId: update.Message.Chat.Id,
+				}
+				// send req to tlg
+				_ = sendReqToTlg(BuildUrl(PathSendMessage, params["operator"]), reqToTlg)
+
+			}
+		}
+	} else {
+		log.Printf("for operator is a new session")
+
+		// in this place i should generate session data for bot and i know that operator not auth
+		// create new session data
+		session := "bot-" + time.Now().Format("20060102150405")
+		CacheSystem.Put(update.Message.User.Id, sessionData{
+			messageId: 0,
+			sessionId: session,
+			botStatus: true,
+			auth:      false,
+		})
+
+		reqToTlg := OutMessage{
+			Text:   "Вы не авторизовались, войдите в систему чтобы начать обслуживать клиентов!😍",
+			ChatId: update.Message.Chat.Id,
+		}
+		// send req to tlg
+		_ = sendReqToTlg(BuildUrl(PathSendMessage, params["operator"]), reqToTlg)
+
+	}
+	return nil
+}
+
+func policyUser(update UpdateType, params map[string]string) {
+
+	session, isOldSession := CacheSystem.Get(update.Message.User.Id)
+
+	if isOldSession {
+		log.Printf("we in old session for user")
+		if session.botStatus {
+
+			// change session status
+			CacheSystem.ChangeSessionStatus(update.Message.User.Id)
+
+			log.Printf("bot status is true for user")
+			_ = policyTlgSm(update, params)
+		} else {
+			log.Printf("bot status is false for user")
+			// TODO здесь нужно обработать запрос
 
 			reqToTlg := OutMessage{
-				Text:   "Чат с оператором завершен!😎",
+				Text:   update.Message.Text,
 				ChatId: session.companionUserId,
 			}
 
-			// send req to tlg
-			err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+			log.Printf("user with id - %d send message to operator with id - %d", update.Message.User.Id, session.companionUserId)
 
+			// send req to tlg
+			err := sendReqToTlg(BuildUrl(PathSendMessage, params["operator"]), reqToTlg)
 			if err != nil {
 				log.Printf("Someting wrong with request to tlg")
 				log.Print(err)
-				return err
 			}
-
-			reqToTlg = OutMessage{
-				Text:   "Сессия с клиентом завершена!😎",
-				ChatId: update.Message.Chat.Id,
-			}
-
-			// send req to tlg
-			err = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
-
-			if err != nil {
-				log.Printf("Someting wrong with request to tlg")
-				log.Print(err)
-				return err
-			}
-
-			// delete cache from
-
-			CacheSystem.ChangeBusyStatus(update.Message.User.Id)
-
-			CacheSystem.Delete(session.companionUserId)
-
-			return nil
-
 		}
-
-		log.Printf("operator with id - %d send message to user with id - %d", update.Message.User.Id, session.companionUserId)
-
-		reqToTlg := OutMessage{
-			Text:   update.Message.Text,
-			ChatId: session.companionUserId,
-		}
-
-		// send req to tlg
-		err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
-
-		if err != nil {
-			log.Printf("Someting wrong with request to tlg")
-			log.Print(err)
-			return err
-		}
-
 	} else {
-
-		reqToTlg := OutMessage{
-			Text:   update.Message.Text,
-			ChatId: session.companionUserId,
-		}
-
-		log.Printf("user with id - %d send message to operator with id - %d", update.Message.User.Id, session.companionUserId)
-
-		// send req to tlg
-		err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
-		if err != nil {
-			log.Printf("Someting wrong with request to tlg")
-			log.Print(err)
-			return err
-		}
+		log.Printf("for user is new session")
+		// create new session data
+		session := "bot-" + time.Now().Format("20060102150405")
+		CacheSystem.Put(update.Message.User.Id, sessionData{
+			messageId:  0,
+			sessionId:  session,
+			botStatus:  true,
+			newSession: true,
+		})
+		_ = policyTlgSm(update, params)
 
 	}
 
-	return nil
 }
 
-func mainPolicy(update UpdateType, path string) {
+func mainPolicy(update UpdateType, botType string, projectId string) (status bool, desc string) {
 
-	// check cache
-	cache, isOldSession := CacheSystem.Get(update.Message.User.Id)
+	params, ok := BotsParams.GetData(projectId)
+
+	if !ok {
+		return false, "project not found"
+	}
+
+	//// check cache
+	//cache, isOldSession := CacheSystem.Get(update.Message.User.Id)
 
 	// if request from operator bot
-	if path == "/operator" {
-		// it is old session?
-		if isOldSession {
-			log.Printf("we in old session for operator")
-			if cache.auth {
-				log.Printf("and operator has logging in")
-				// it is not bot mode? if yes we send text user
-				if !cache.botStatus {
-					log.Printf("bot mode is false for operator")
-					_ = policyOperatorBot(update, path)
-					// if it bot mode, i don't know why operator send text:D
-				} else {
-					log.Printf("bot mode is true for operator")
+	if botType == "operator" {
+		// TODO check errors
+		_ = policyOperator(update, params)
+		return true, "message from operator success processed"
 
-					reqToTlg := OutMessage{
-						Text:   "Активный диалогов нет:) Отдыхайте!😍",
-						ChatId: update.Message.Chat.Id,
-					}
-					// send req to tlg
-					_ = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
-				}
-			} else {
-				if update.Message.Text == "lolkaperduska" {
-					reqToTlg := OutMessage{
-						Text:   "Вы успешно авторизовались, молодец! Ожидайте диалога с клиентом!😍",
-						ChatId: update.Message.Chat.Id,
-					}
-					// send req to tlg
-					_ = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
-
-					CacheSystem.ChangeAuthStatus(update.Message.User.Id)
-
-				} else {
-
-					reqToTlg := OutMessage{
-						Text:   "Пароль неправильный, попытайтесь еще раз. Будьте старательны👹",
-						ChatId: update.Message.Chat.Id,
-					}
-					// send req to tlg
-					_ = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
-
-				}
-			}
-		} else {
-			log.Printf("for operator is a new session")
-
-			// in this place i should generate session data for bot and i know that operator not auth
-			// create new session data
-			session := "bot-" + time.Now().Format("20060102150405")
-			CacheSystem.Put(update.Message.User.Id, sessionData{
-				messageId: 0,
-				sessionId: session,
-				botStatus: true,
-				auth:      false,
-			})
-
-			reqToTlg := OutMessage{
-				Text:   "Вы не авторизовались, войдите в систему чтобы начать обслуживать клиентов!😍",
-				ChatId: update.Message.Chat.Id,
-			}
-			// send req to tlg
-			_ = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
-
-		}
-
+	} else if botType == "bot" {
+		policyUser(update, params)
+		return true, "message from user success processed"
 	} else {
-		if isOldSession {
-
-			log.Printf("we in old session for user")
-			if cache.botStatus {
-
-				// change session status
-				CacheSystem.ChangeSessionStatus(update.Message.User.Id)
-
-				log.Printf("bot status is true for user")
-				_ = policyTlgSm(update)
-			} else {
-				log.Printf("bot status is false for user")
-				_ = policyOperatorBot(update, path)
-			}
-		} else {
-			log.Printf("for user is new session")
-
-			// create new session data
-			session := "bot-" + time.Now().Format("20060102150405")
-			CacheSystem.Put(update.Message.User.Id, sessionData{
-				messageId:  0,
-				sessionId:  session,
-				botStatus:  true,
-				newSession: true,
-			})
-			_ = policyTlgSm(update)
-
-		}
+		return false, "error, url is wrong"
 	}
 
 }
@@ -353,20 +364,34 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	// Логирование входящего запроса
 	log.Printf("Request received: %s\nMethod: %s\nPATH: %s\nRAW_PATH: %s\nRAW_QUERY:%s", update.Message.Text, r.Method, r.URL.Path, r.URL.RawPath, r.URL.RawQuery)
 
-	mainPolicy(update, r.URL.Path)
+	params := strings.Split(r.URL.Path, "/")
 
-	var workerStatus RespByServ
+	var status bool
+	var desc string
 
-	workerStatus.Ok = true
+	if len(params) != 3 {
 
-	js, err := json.Marshal(workerStatus)
+		status = false
+		desc = "bad request"
+
+	} else {
+
+		projectId := params[1]
+		botType := params[2]
+
+		status, desc = mainPolicy(update, botType, projectId)
+
+	}
+
+	js, err := json.Marshal(RespByServ{
+		Ok:   status,
+		Desc: desc,
+	})
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
-
-	// get message from tlg
+	_, _ = w.Write(js)
 }

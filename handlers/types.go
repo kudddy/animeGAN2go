@@ -198,7 +198,8 @@ type OutMessage struct {
 */
 
 type RespByServ struct {
-	Ok bool `json:"ok"`
+	Ok   bool   `json:"ok"`
+	Desc string `json:"desc"`
 }
 
 /**
