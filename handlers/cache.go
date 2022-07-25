@@ -167,6 +167,7 @@ func (l *botsParams) GetData(projectIs string) (map[string]string, bool) {
 }
 
 func (l *botsParams) AddData(projectId string, botData map[string]string) {
+
 	l.data[projectId] = botData
 }
 

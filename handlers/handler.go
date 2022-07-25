@@ -8,7 +8,13 @@ import (
 	"time"
 )
 
-const urlPathToSkill = "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/ZMgoqvmH:abf05f2ca8543405adad9b5bce52b548496dc2b8"
+// API errors
+const (
+	// ErrAPIForbidden happens when a token is bad
+	TypeBot           = "bot"
+	TypeOperator      = "operator"
+	TypeUpdateProject = "update"
+)
 
 func policyTlgSm(update UpdateType, params map[string]string) error {
 
@@ -329,18 +335,29 @@ func mainPolicy(update UpdateType, botType string, projectId string) (status boo
 	//cache, isOldSession := CacheSystem.Get(update.Message.User.Id)
 
 	// if request from operator bot
-	if botType == "operator" {
+	if botType == TypeOperator {
 		// TODO check errors
 		_ = policyOperator(update, params)
 		return true, "message from operator success processed"
-
-	} else if botType == "bot" {
+	} else if botType == TypeBot {
+		// TODO check errors
 		policyUser(update, params)
 		return true, "message from user success processed"
 	} else {
 		return false, "error, url is wrong"
 	}
 
+}
+
+func updateBotsParams(update UpdateBotsParams, projectId string) (bool, string) {
+
+	BotsParams.AddData(projectId, map[string]string{
+		"bot":        update.Bot,
+		"operator":   update.Operator,
+		"sm-webhook": update.Webhook,
+	})
+
+	return true, "ok"
 }
 
 // Метод Handler. Данный метод будет обрабатывать HTTP запросы поступающие к функции
@@ -353,41 +370,44 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 	decoder := json.NewDecoder(r.Body)
 
-	log.Println(decoder)
-
-	var update UpdateType
-	err := decoder.Decode(&update)
-	if err != nil {
-		panic(err)
-	}
-
-	// Логирование входящего запроса
-	log.Printf("Request received: %s\nMethod: %s\nPATH: %s\nRAW_PATH: %s\nRAW_QUERY:%s", update.Message.Text, r.Method, r.URL.Path, r.URL.RawPath, r.URL.RawQuery)
-
 	params := strings.Split(r.URL.Path, "/")
-
 	var status bool
 	var desc string
-
 	if len(params) != 3 {
-
 		status = false
 		desc = "bad request"
-
 	} else {
-
 		projectId := params[1]
-		botType := params[2]
+		method := params[2]
 
-		status, desc = mainPolicy(update, botType, projectId)
+		if method == TypeBot || method == TypeOperator {
+
+			var update UpdateType
+			err := decoder.Decode(&update)
+			// Логирование входящего запроса
+			log.Printf("Request received: %s\nMethod: %s\nPATH: %s\nRAW_PATH: %s\nRAW_QUERY:%s", update.Message.Text, r.Method, r.URL.Path, r.URL.RawPath, r.URL.RawQuery)
+			if err != nil {
+				panic(err)
+			}
+			status, desc = mainPolicy(update, method, projectId)
+		} else if method == TypeUpdateProject {
+
+			var update UpdateBotsParams
+
+			err := decoder.Decode(&update)
+			if err != nil {
+				panic(err)
+			}
+
+			status, desc = updateBotsParams(update, projectId)
+
+		}
 
 	}
-
 	js, err := json.Marshal(RespByServ{
 		Ok:   status,
 		Desc: desc,
 	})
-
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

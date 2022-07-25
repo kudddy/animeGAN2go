@@ -463,3 +463,9 @@ func (data *RespFromSmType) processRespFromSm() (string, string, []Buttons) {
 	}
 
 }
+
+type UpdateBotsParams struct {
+	Bot      string `json:"bot"`
+	Operator string `json:"operator"`
+	Webhook  string `json:"sm-webhook"`
+}
