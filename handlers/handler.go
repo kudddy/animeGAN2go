@@ -169,7 +169,7 @@ func policyOperator(update UpdateType, params map[string]string) error {
 					}
 
 					// send req to tlg
-					err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+					err := sendReqToTlg(BuildUrl(PathSendMessage, params["bot"]), reqToTlg)
 
 					if err != nil {
 						log.Printf("Someting wrong with request to tlg")
@@ -183,7 +183,7 @@ func policyOperator(update UpdateType, params map[string]string) error {
 					}
 
 					// send req to tlg
-					err = sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["operator"]), reqToTlg)
+					err = sendReqToTlg(BuildUrl(PathSendMessage, params["operator"]), reqToTlg)
 
 					if err != nil {
 						log.Printf("Someting wrong with request to tlg")
@@ -209,7 +209,7 @@ func policyOperator(update UpdateType, params map[string]string) error {
 				}
 
 				// send req to tlg
-				err := sendReqToTlg(BuildUrl(PathSendMessage, BotsInfo["bot"]), reqToTlg)
+				err := sendReqToTlg(BuildUrl(PathSendMessage, params["bot"]), reqToTlg)
 
 				if err != nil {
 					log.Printf("Someting wrong with request to tlg")
