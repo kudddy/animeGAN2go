@@ -5,6 +5,9 @@ import "strings"
 /**
 | ============== Types ============== |
 */
+
+// Types for TLG req
+
 type Chat struct {
 	Id    int    `json:"id"`
 	Type  string `json:"type"`
@@ -191,6 +194,16 @@ type OutMessage struct {
 	Text          string                `json:"text"`
 	ReplayToMsgId *int                  `json:"reply_to_message_id,omitempty"`
 	ReplyMarkup   *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+}
+
+/**
+| ============== Types for tlg answer ============== |
+*/
+
+type RespFromTlg struct {
+	Ok          bool   `json:"ok,omitempty"`
+	Result      bool   `json:"result,omitempty"`
+	Description string `json:"description,omitempty"`
 }
 
 /**

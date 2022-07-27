@@ -39,21 +39,21 @@ func sendReqToSm(urlPath string, outData ReqToSmType) (RespFromSmType, error) {
 	}
 }
 
-func sendReqToTlg(urlPath string, outData OutMessage) error {
+func sendReqToTlg(urlPath string, outData OutMessage) (RespFromTlg, error) {
 
-	var data RespFromSmType
+	var data RespFromTlg
 
 	body, err := json.Marshal(outData)
 	if err != nil {
 		log.Fatal(err)
-		return err
+		return data, err
 	}
 	bodyBytes := bytes.NewBuffer(body)
 
 	response, err := http.Post(urlPath, "application/json", bodyBytes)
 
 	if err != nil {
-		return err
+		return data, err
 	}
 
 	defer response.Body.Close()
@@ -64,9 +64,9 @@ func sendReqToTlg(urlPath string, outData OutMessage) error {
 
 		err = decoder.Decode(&data)
 
-		return nil
+		return data, nil
 	} else {
 		//  TODO it is bug
-		return nil
+		return data, nil
 	}
 }

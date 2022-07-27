@@ -69,7 +69,7 @@ func policyTlgSm(update UpdateType, botParams botsInfo) error {
 			}
 		}
 
-		err = sendReqToTlg(BuildUrl(PathSendMessage, botParams.bot), reqToTlg)
+		_, err = sendReqToTlg(BuildUrl(PathSendMessage, botParams.bot), reqToTlg)
 
 		if err != nil {
 			log.Printf("Someting wrong with request to tlg")
@@ -139,7 +139,7 @@ func policyTlgSm(update UpdateType, botParams botsInfo) error {
 
 	// send req to tlg
 
-	err = sendReqToTlg(BuildUrl(PathSendMessage, botParams.bot), reqToTlg)
+	_, err = sendReqToTlg(BuildUrl(PathSendMessage, botParams.bot), reqToTlg)
 
 	if err != nil {
 		log.Printf("Someting wrong with request to tlg")
@@ -169,7 +169,7 @@ func policyOperator(update UpdateType, botParams botsInfo) error {
 					}
 
 					// send req to tlg
-					err := sendReqToTlg(BuildUrl(PathSendMessage, botParams.bot), reqToTlg)
+					_, err := sendReqToTlg(BuildUrl(PathSendMessage, botParams.bot), reqToTlg)
 
 					if err != nil {
 						log.Printf("Someting wrong with request to tlg")
@@ -183,7 +183,7 @@ func policyOperator(update UpdateType, botParams botsInfo) error {
 					}
 
 					// send req to tlg
-					err = sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
+					_, err = sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
 
 					if err != nil {
 						log.Printf("Someting wrong with request to tlg")
@@ -209,7 +209,7 @@ func policyOperator(update UpdateType, botParams botsInfo) error {
 				}
 
 				// send req to tlg
-				err := sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
+				_, err := sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
 
 				if err != nil {
 					log.Printf("Someting wrong with request to tlg")
@@ -219,7 +219,7 @@ func policyOperator(update UpdateType, botParams botsInfo) error {
 
 				// _ = policyOperatorBot(update, botType)
 
-				// if it bot mode, i don't know why operator send text:D
+				// if it is bot mode, i don't know why operator send text:D
 			} else {
 				log.Printf("bot mode is true for operator")
 
@@ -228,7 +228,7 @@ func policyOperator(update UpdateType, botParams botsInfo) error {
 					ChatId: update.Message.Chat.Id,
 				}
 				// send req to tlg
-				_ = sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
+				_, _ = sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
 			}
 		} else {
 			if update.Message.Text == "pass" {
@@ -237,7 +237,7 @@ func policyOperator(update UpdateType, botParams botsInfo) error {
 					ChatId: update.Message.Chat.Id,
 				}
 				// send req to tlg
-				_ = sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
+				_, _ = sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
 
 				CacheSystem.ChangeAuthStatus(update.Message.User.Id)
 
@@ -248,7 +248,7 @@ func policyOperator(update UpdateType, botParams botsInfo) error {
 					ChatId: update.Message.Chat.Id,
 				}
 				// send req to tlg
-				_ = sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
+				_, _ = sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
 
 			}
 		}
@@ -270,7 +270,7 @@ func policyOperator(update UpdateType, botParams botsInfo) error {
 			ChatId: update.Message.Chat.Id,
 		}
 		// send req to tlg
-		_ = sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
+		_, _ = sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
 
 	}
 	return nil
@@ -301,7 +301,7 @@ func policyUser(update UpdateType, botParams botsInfo) {
 			log.Printf("user with id - %d send message to operator with id - %d", update.Message.User.Id, session.companionUserId)
 
 			// send req to tlg
-			err := sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
+			_, err := sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
 			if err != nil {
 				log.Printf("Someting wrong with request to tlg")
 				log.Print(err)
@@ -357,7 +357,27 @@ func updateBotsParams(update UpdateBotsParams, projectId string) (bool, string) 
 		update.Webhook,
 	})
 
-	return true, "update success"
+	//TODO in this place we should add request to tlg and registration webhook for all tokens
+
+	serviceHostBot := "https://smapi.pv-api.sbc.space/fn_bbcfcc87_01f5_4b17_a2f3_486d51f581d8/" + projectId + "/bot"
+
+	data, err := sendReqToTlg(BuildUrl(PathSetWebhook, update.Bot)+"?url="+serviceHostBot, OutMessage{})
+
+	if err != nil {
+		log.Printf("someting wrong with resp to tlg where we update webhook")
+		return false, data.Description
+	}
+
+	serviceHostOperator := "https://smapi.pv-api.sbc.space/fn_bbcfcc87_01f5_4b17_a2f3_486d51f581d8/" + projectId + "/operator"
+
+	data, err = sendReqToTlg(BuildUrl(PathSetWebhook, update.Bot)+"?url="+serviceHostOperator, OutMessage{})
+
+	if err != nil {
+		log.Printf("someting wrong with resp to tlg where we update webhook")
+		return false, data.Description
+	}
+
+	return true, data.Description
 }
 
 // Handler Метод Handler. Данный метод будет обрабатывать HTTP запросы поступающие к функции
