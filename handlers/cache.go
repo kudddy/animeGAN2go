@@ -12,14 +12,14 @@ type Dictionary map[string]struct {
 	botStatus bool
 }
 
-// struct for bot param
-var BotsInfo = map[string]string{
-	"bot":        "***",
-	"operator":   "***",
-	"sm-webhook": "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/ZMgoqvmH:abf05f2ca8543405adad9b5bce52b548496dc2b8",
-}
+//// struct for bot param
+//var BotsInfo = map[string]string{
+//	"bot":        "***",
+//	"operator":   "***",
+//	"sm-webhook": "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/ZMgoqvmH:abf05f2ca8543405adad9b5bce52b548496dc2b8",
+//}
 
-// CACHE SYSTEM
+// `SessionData
 type sessionData struct {
 	sessionId       string
 	botStatus       bool
@@ -156,23 +156,36 @@ func (m *TTLMap) Delete(k int) {
 
 var CacheSystem = New(1000, 1000)
 
-// CACHE FOR BOT PARAMS BY PROJECT ID
-type botsParams struct {
-	data map[string]map[string]string
+// CACHE FOR BOT PARAMS BY PROJECT
+
+type botsInfo struct {
+	bot      string
+	operator string
+	webhook  string
 }
 
-func (l *botsParams) GetData(projectIs string) (map[string]string, bool) {
+var BotsInfo = botsInfo{
+	"***",
+	"***",
+	"https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/ZMgoqvmH:abf05f2ca8543405adad9b5bce52b548496dc2b8",
+}
+
+type botsParams struct {
+	data map[string]botsInfo
+}
+
+func (l *botsParams) GetData(projectIs string) (botsInfo, bool) {
 	d, ok := l.data[projectIs]
 	return d, ok
 }
 
-func (l *botsParams) AddData(projectId string, botData map[string]string) {
+func (l *botsParams) AddData(projectId string, botData botsInfo) {
 
 	l.data[projectId] = botData
 }
 
 func (l *botsParams) Init() {
-	l.data = map[string]map[string]string{}
+	l.data = map[string]botsInfo{}
 }
 
 func Init() botsParams {

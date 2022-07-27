@@ -12,8 +12,6 @@ func main() {
 
 	r := mux.NewRouter()
 
-	// запускаем в фоне воркер который в фоне опрашивает очередь на предмет обновлений
-
 	http.Handle("/", r)
 	r.HandleFunc("/start", handlers.Handler)
 
