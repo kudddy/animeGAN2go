@@ -351,12 +351,6 @@ func mainPolicy(update UpdateType, botType string, projectId string) (status boo
 
 func updateBotsParams(update UpdateBotsParams, projectId string) (bool, string) {
 
-	BotsParams.AddData(projectId, botsInfo{
-		update.Bot,
-		update.Operator,
-		update.Webhook,
-	})
-
 	//TODO in this place we should add request to tlg and registration webhook for all tokens
 
 	serviceHostBot := "https://smapi.pv-api.sbc.space/fn_bbcfcc87_01f5_4b17_a2f3_486d51f581d8/" + projectId + "/bot"
@@ -370,12 +364,18 @@ func updateBotsParams(update UpdateBotsParams, projectId string) (bool, string) 
 
 	serviceHostOperator := "https://smapi.pv-api.sbc.space/fn_bbcfcc87_01f5_4b17_a2f3_486d51f581d8/" + projectId + "/operator"
 
-	data, err = sendReqToTlg(BuildUrl(PathSetWebhook, update.Bot)+"?url="+serviceHostOperator, OutMessage{})
+	data, err = sendReqToTlg(BuildUrl(PathSetWebhook, update.Operator)+"?url="+serviceHostOperator, OutMessage{})
 
 	if err != nil {
 		log.Printf("someting wrong with resp to tlg where we update webhook")
 		return false, data.Description
 	}
+
+	BotsParams.AddData(projectId, botsInfo{
+		update.Bot,
+		update.Operator,
+		update.Webhook,
+	})
 
 	return true, data.Description
 }
