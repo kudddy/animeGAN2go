@@ -1,12 +1,5 @@
 package handlers
 
-//import (
-//	"bytes"
-//	"encoding/json"
-//	"log"
-//	"net/http"
-//)
-
 const (
 	PathSetWebhook            = "/setWebhook"
 	PathSendMessage           = "/sendMessage"

@@ -12,13 +12,6 @@ type Dictionary map[string]struct {
 	botStatus bool
 }
 
-//// struct for bot param
-//var BotsInfo = map[string]string{
-//	"bot":        "***",
-//	"operator":   "***",
-//	"sm-webhook": "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/ZMgoqvmH:abf05f2ca8543405adad9b5bce52b548496dc2b8",
-//}
-
 // `SessionData
 type sessionData struct {
 	sessionId       string
@@ -180,7 +173,6 @@ func (l *botsParams) GetData(projectIs string) (botsInfo, bool) {
 }
 
 func (l *botsParams) AddData(projectId string, botData botsInfo) {
-
 	l.data[projectId] = botData
 }
 
@@ -197,3 +189,6 @@ func Init() botsParams {
 }
 
 var BotsParams = Init()
+
+// temporary cache for auth, in future this data we will get from database
+var AuthTokens = []string{"7d216f7c-cfee-4b76-a550-1c66a93848c9", "b1630dbc-51a4-4462-81c8-5233d2a92081"}

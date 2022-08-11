@@ -25,4 +25,5 @@ Example payload:
     "sm-webhook": "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/cGnGPZWb:45c9c4e54edfcf2cfe505f84e3f338185a334e42"
 }
 ```
+generate token
 

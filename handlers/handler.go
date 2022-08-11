@@ -348,7 +348,7 @@ func (update *UpdateType) mainPolicy(botType string, projectId string) (status b
 
 }
 
-func updateBotsParams(update UpdateBotsParams, projectId string) (bool, string) {
+func (update *UpdateBotsParams) updateBotsParams(projectId string) (bool, string) {
 
 	//TODO in this place we should add request to tlg and registration webhook for all tokens
 
@@ -395,36 +395,46 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		status = false
 		desc = "bad request"
 	} else {
-		// TODO validate this param
 		projectId := params[1]
-		method := params[2]
 
-		if method == TypeBot || method == TypeOperator {
+		// check auth token
+		ok := contains(AuthTokens, projectId)
 
-			var update UpdateType
-			err := decoder.Decode(&update)
-			// Логирование входящего запроса
-			log.Printf("Request received: %s\nMethod: %s\nPATH: %s\nRAW_PATH: %s\nRAW_QUERY:%s", update.Message.Text, r.Method, r.URL.Path, r.URL.RawPath, r.URL.RawQuery)
-			if err != nil {
-				panic(err)
+		if ok {
+			method := params[2]
+
+			if method == TypeBot || method == TypeOperator {
+
+				var update UpdateType
+				err := decoder.Decode(&update)
+				// Логирование входящего запроса
+				log.Printf("Request received: %s\nMethod: %s\nPATH: %s\nRAW_PATH: %s\nRAW_QUERY:%s", update.Message.Text, r.Method, r.URL.Path, r.URL.RawPath, r.URL.RawQuery)
+				if err != nil {
+					panic(err)
+				}
+				status, desc = update.mainPolicy(method, projectId)
+			} else if method == TypeUpdateProject {
+
+				var update UpdateBotsParams
+
+				err := decoder.Decode(&update)
+				if err != nil {
+					panic(err)
+				}
+
+				status, desc = update.updateBotsParams(projectId)
+
+			} else {
+				status = false
+				desc = "bad method format"
 			}
-			status, desc = update.mainPolicy(method, projectId)
-		} else if method == TypeUpdateProject {
-
-			var update UpdateBotsParams
-
-			err := decoder.Decode(&update)
-			if err != nil {
-				panic(err)
-			}
-
-			status, desc = updateBotsParams(update, projectId)
-
 		} else {
 			status = false
-			desc = "bad method format"
+			desc = "not valid auth token"
 		}
+
 	}
+
 	js, err := json.Marshal(RespByServ{
 		Ok:   status,
 		Desc: desc,
