@@ -59,14 +59,13 @@ func sendReqToTlg(urlPath string, outData OutMessage) (RespFromTlg, error) {
 	defer response.Body.Close()
 
 	if response.StatusCode == http.StatusOK {
-		fmt.Println("Все ок, код положительный")
-		fmt.Println(response.Body)
+		fmt.Println("ok response from tlg server")
 		decoder := json.NewDecoder(response.Body)
 
 		err = decoder.Decode(&data)
 
 		if err != nil {
-			fmt.Println("Ошибка деодирования в структуру данных")
+			fmt.Println("response decoding error")
 		}
 
 		return data, nil

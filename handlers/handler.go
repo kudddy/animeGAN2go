@@ -98,6 +98,7 @@ func policyTlgSm(update UpdateType, botParams botsInfo) error {
 			CacheSystem.ChangeBotStatus(update.Message.User.Id)
 
 			// create session id for bot
+			// TODO very dirty, i can create method and hide this
 			CacheSystem.Put(operatorBotId, sessionData{
 				messageId:       0,
 				sessionId:       operatorSession.sessionId,
