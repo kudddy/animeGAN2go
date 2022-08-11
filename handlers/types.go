@@ -376,7 +376,7 @@ type RespFromSmType struct {
 	Payload     payloadForSm `json:"payload"`
 }
 
-func generatePayloadForSm(update UpdateType, session sessionData) ReqToSmType {
+func (update *UpdateType) generatePayloadForSm(session sessionData) ReqToSmType {
 
 	messageName := "MESSAGE_TO_SKILL"
 

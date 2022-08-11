@@ -9,6 +9,7 @@ import (
 )
 
 // API errors
+//TODO create generate auth token method
 const (
 	// TypeBot types of methods to services
 	TypeBot           = "bot"
@@ -16,12 +17,12 @@ const (
 	TypeUpdateProject = "update"
 )
 
-func policyTlgSm(update UpdateType, botParams botsInfo) error {
+func (update *UpdateType) policyTlgSm(botParams botsInfo) error {
 
 	session, _ := CacheSystem.Get(update.Message.User.Id)
 
 	// convert message to sm
-	reqToSm := generatePayloadForSm(update, session)
+	reqToSm := update.generatePayloadForSm(session)
 
 	// send message to sm and get resp
 	resp, err := sendReqToSm(botParams.webhook, reqToSm)
@@ -150,7 +151,7 @@ func policyTlgSm(update UpdateType, botParams botsInfo) error {
 	return nil
 }
 
-func policyOperator(update UpdateType, botParams botsInfo) error {
+func (update *UpdateType) policyOperator(botParams botsInfo) error {
 
 	session, isOldSession := CacheSystem.Get(update.Message.User.Id)
 
@@ -277,7 +278,7 @@ func policyOperator(update UpdateType, botParams botsInfo) error {
 	return nil
 }
 
-func policyUser(update UpdateType, botParams botsInfo) {
+func (update *UpdateType) policyUser(botParams botsInfo) {
 
 	session, isOldSession := CacheSystem.Get(update.Message.User.Id)
 
@@ -289,7 +290,7 @@ func policyUser(update UpdateType, botParams botsInfo) {
 			CacheSystem.ChangeSessionStatus(update.Message.User.Id)
 
 			log.Printf("bot status is true for user")
-			_ = policyTlgSm(update, botParams)
+			_ = update.policyTlgSm(botParams)
 		} else {
 			log.Printf("bot status is false for user")
 			// TODO здесь нужно обработать запрос
@@ -318,13 +319,13 @@ func policyUser(update UpdateType, botParams botsInfo) {
 			botStatus:  true,
 			newSession: true,
 		})
-		_ = policyTlgSm(update, botParams)
+		_ = update.policyTlgSm(botParams)
 
 	}
 
 }
 
-func mainPolicy(update UpdateType, botType string, projectId string) (status bool, desc string) {
+func (update *UpdateType) mainPolicy(botType string, projectId string) (status bool, desc string) {
 
 	params, ok := BotsParams.GetData(projectId)
 
@@ -332,17 +333,14 @@ func mainPolicy(update UpdateType, botType string, projectId string) (status boo
 		return false, "project not found"
 	}
 
-	//// check cache
-	//cache, isOldSession := CacheSystem.Get(update.Message.User.Id)
-
 	// if request from operator bot
 	if botType == TypeOperator {
 		// TODO check errors
-		_ = policyOperator(update, params)
+		_ = update.policyOperator(params)
 		return true, "message from operator success processed"
 	} else if botType == TypeBot {
 		// TODO check errors
-		policyUser(update, params)
+		update.policyUser(params)
 		return true, "message from user success processed"
 	} else {
 		return false, "error, url is wrong"
@@ -354,7 +352,7 @@ func updateBotsParams(update UpdateBotsParams, projectId string) (bool, string) 
 
 	//TODO in this place we should add request to tlg and registration webhook for all tokens
 
-	serviceHostBot := "https://smapi.pv-api.sbc.space/fn_bbcfcc87_01f5_4b17_a2f3_486d51f581d8/" + projectId + "/bot"
+	serviceHostBot := APIEndpoint + projectId + "/bot"
 
 	data, err := sendReqToTlg(BuildUrl(PathSetWebhook, update.Bot)+"?url="+serviceHostBot, OutMessage{})
 
@@ -362,8 +360,7 @@ func updateBotsParams(update UpdateBotsParams, projectId string) (bool, string) 
 		log.Printf("someting wrong with resp to tlg where we update webhook")
 		return false, data.Description
 	}
-
-	serviceHostOperator := "https://smapi.pv-api.sbc.space/fn_bbcfcc87_01f5_4b17_a2f3_486d51f581d8/" + projectId + "/operator"
+	serviceHostOperator := APIEndpoint + projectId + "/operator"
 
 	data, err = sendReqToTlg(BuildUrl(PathSetWebhook, update.Operator)+"?url="+serviceHostOperator, OutMessage{})
 
@@ -398,6 +395,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		status = false
 		desc = "bad request"
 	} else {
+		// TODO validate this param
 		projectId := params[1]
 		method := params[2]
 
@@ -410,7 +408,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				panic(err)
 			}
-			status, desc = mainPolicy(update, method, projectId)
+			status, desc = update.mainPolicy(method, projectId)
 		} else if method == TypeUpdateProject {
 
 			var update UpdateBotsParams
