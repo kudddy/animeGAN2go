@@ -211,7 +211,7 @@ func (update *UpdateType) policyOperator(botParams botsInfo) error {
 				}
 
 				// send req to tlg
-				_, err := sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
+				_, err := sendReqToTlg(BuildUrl(PathSendMessage, botParams.bot), reqToTlg)
 
 				if err != nil {
 					log.Printf("Someting wrong with request to tlg")
