@@ -35,6 +35,7 @@ type TTLMap struct {
 
 func New(ln int, maxTTL int) (m *TTLMap) {
 	m = &TTLMap{m: make(map[int]*item, ln)}
+	// TODO i am not sure what is optimal method, but it is work
 	go func() {
 		for now := range time.Tick(time.Second) {
 			m.l.Lock()
@@ -148,6 +149,9 @@ func (m *TTLMap) Delete(k int) {
 }
 
 var CacheSystem = New(1000, 1000)
+
+var CacheSystemUser = New(1000, 1000)
+var CacheSystemOperator = New(1000, 1000)
 
 // CACHE FOR BOT PARAMS BY PROJECT
 

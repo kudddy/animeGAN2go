@@ -19,7 +19,10 @@ const (
 
 func (update *UpdateType) policyTlgSm(botParams botsInfo) error {
 
-	session, _ := CacheSystem.Get(update.Message.User.Id)
+	//session, _ := CacheSystem.Get(update.Message.User.Id)
+
+	// get user session
+	session, _ := CacheSystemUser.Get(update.Message.User.Id)
 
 	// convert message to sm
 	reqToSm := update.generatePayloadForSm(session)
@@ -83,12 +86,12 @@ func (update *UpdateType) policyTlgSm(botParams botsInfo) error {
 	} else if resp.MessageName == "NOTHING_FOUND" {
 
 		// in this place we should get from db user_id with max score
-		operators := CacheSystem.GetRandomAuthOperators()
+		operators := CacheSystemOperator.GetRandomAuthOperators()
 		if len(operators) > 0 {
 			// first in, first out
 			var operatorBotId = operators[0]
 
-			operatorSession, _ := CacheSystem.Get(operatorBotId)
+			operatorSession, _ := CacheSystemOperator.Get(operatorBotId)
 
 			// and create new session data for bot
 
@@ -96,11 +99,20 @@ func (update *UpdateType) policyTlgSm(botParams botsInfo) error {
 
 			log.Printf("save session parametrs for operator when id is %d, companion id is %d", operatorBotId, update.Message.User.Id)
 			// TODO its not true
-			CacheSystem.ChangeBotStatus(update.Message.User.Id)
+			//CacheSystem.ChangeBotStatus(update.Message.User.Id)
+			CacheSystemUser.ChangeBotStatus(update.Message.User.Id)
 
 			// create session id for bot
-			// TODO very dirty, i can create method and hide this
-			CacheSystem.Put(operatorBotId, sessionData{
+			//CacheSystem.Put(operatorBotId, sessionData{
+			//	messageId:       0,
+			//	sessionId:       operatorSession.sessionId,
+			//	botStatus:       false,
+			//	companionUserId: update.Message.User.Id,
+			//	auth:            operatorSession.auth,
+			//	busy:            true,
+			//})
+
+			CacheSystemOperator.Put(operatorBotId, sessionData{
 				messageId:       0,
 				sessionId:       operatorSession.sessionId,
 				botStatus:       false,
@@ -111,18 +123,25 @@ func (update *UpdateType) policyTlgSm(botParams botsInfo) error {
 
 			log.Printf("save session parametrs for bot when id is %d, companion id is %d", update.Message.User.Id, operatorBotId)
 			// update user session param as companionUserId
-			CacheSystem.Put(update.Message.User.Id, sessionData{
+			//CacheSystem.Put(update.Message.User.Id, sessionData{
+			//	messageId:       session.messageId,
+			//	sessionId:       session.sessionId,
+			//	botStatus:       false,
+			//	companionUserId: operatorBotId,
+			//})
+
+			CacheSystemUser.Put(update.Message.User.Id, sessionData{
 				messageId:       session.messageId,
 				sessionId:       session.sessionId,
 				botStatus:       false,
 				companionUserId: operatorBotId,
 			})
 
-			s, _ := CacheSystem.Get(update.Message.User.Id)
+			s, _ := CacheSystemUser.Get(update.Message.User.Id)
 
 			log.Printf("session parameters from cache for %d is %d", update.Message.User.Id, s.companionUserId)
 
-			d, _ := CacheSystem.Get(operatorBotId)
+			d, _ := CacheSystemOperator.Get(operatorBotId)
 
 			log.Printf("session parameters from cache for %d is %d", operatorBotId, d.companionUserId)
 
@@ -153,7 +172,7 @@ func (update *UpdateType) policyTlgSm(botParams botsInfo) error {
 
 func (update *UpdateType) policyOperator(botParams botsInfo) error {
 
-	session, isOldSession := CacheSystem.Get(update.Message.User.Id)
+	session, isOldSession := CacheSystemOperator.Get(update.Message.User.Id)
 
 	if isOldSession {
 		log.Printf("we in old session for operator")
@@ -195,9 +214,9 @@ func (update *UpdateType) policyOperator(botParams botsInfo) error {
 
 					// delete cache from
 
-					CacheSystem.ChangeBusyStatus(update.Message.User.Id)
+					CacheSystemOperator.ChangeBusyStatus(update.Message.User.Id)
 
-					CacheSystem.Delete(session.companionUserId)
+					CacheSystemUser.Delete(session.companionUserId)
 
 					return nil
 
@@ -241,7 +260,7 @@ func (update *UpdateType) policyOperator(botParams botsInfo) error {
 				// send req to tlg
 				_, _ = sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
 
-				CacheSystem.ChangeAuthStatus(update.Message.User.Id)
+				CacheSystemOperator.ChangeAuthStatus(update.Message.User.Id)
 
 			} else {
 
@@ -259,8 +278,8 @@ func (update *UpdateType) policyOperator(botParams botsInfo) error {
 
 		// in this place i should generate session data for bot and i know that operator not auth
 		// create new session data
-		session := "bot-" + time.Now().Format("20060102150405")
-		CacheSystem.Put(update.Message.User.Id, sessionData{
+		session := "bot-" + time.Now().Format("2017-09-07 17:06:04.000000")
+		CacheSystemOperator.Put(update.Message.User.Id, sessionData{
 			messageId: 0,
 			sessionId: session,
 			botStatus: true,
@@ -280,14 +299,14 @@ func (update *UpdateType) policyOperator(botParams botsInfo) error {
 
 func (update *UpdateType) policyUser(botParams botsInfo) {
 
-	session, isOldSession := CacheSystem.Get(update.Message.User.Id)
+	session, isOldSession := CacheSystemUser.Get(update.Message.User.Id)
 
 	if isOldSession {
 		log.Printf("we in old session for user")
 		if session.botStatus {
 
 			// change session status
-			CacheSystem.ChangeSessionStatus(update.Message.User.Id)
+			CacheSystemUser.ChangeSessionStatus(update.Message.User.Id)
 
 			log.Printf("bot status is true for user")
 			_ = update.policyTlgSm(botParams)
@@ -312,8 +331,8 @@ func (update *UpdateType) policyUser(botParams botsInfo) {
 	} else {
 		log.Printf("for user is new session")
 		// create new session data
-		session := "bot-" + time.Now().Format("20060102150405")
-		CacheSystem.Put(update.Message.User.Id, sessionData{
+		session := "bot-" + time.Now().Format("2017-09-07 17:06:04.000000")
+		CacheSystemUser.Put(update.Message.User.Id, sessionData{
 			messageId:  0,
 			sessionId:  session,
 			botStatus:  true,
