@@ -380,11 +380,14 @@ func (update *UpdateBotsParams) updateBotsParams(projectId string) (bool, string
 		return false, data.Description
 	}
 
+	//updateCache
 	BotsParams.AddData(projectId, botsInfo{
 		update.Bot,
 		update.Operator,
 		update.Webhook,
 	})
+	CacheUser.AddData(projectId, New(1000, 1000))
+	CacheOperator.AddData(projectId, New(1000, 1000))
 
 	return true, data.Description
 }
