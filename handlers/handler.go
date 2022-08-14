@@ -17,9 +17,10 @@ const (
 	TypeUpdateProject = "update"
 )
 
-func (update *UpdateType) policyTlgSm(botParams botsInfo) error {
-
-	//session, _ := CacheSystem.Get(update.Message.User.Id)
+func (update *UpdateType) policyTlgSm(projectId string) error {
+	botParams, _ := BotsParams.GetData(projectId)
+	CacheSystemUser, _ := CacheUser.GetData(projectId)
+	CacheSystemOperator, _ := CacheOperator.GetData(projectId)
 
 	// get user session
 	session, _ := CacheSystemUser.Get(update.Message.User.Id)
@@ -102,16 +103,6 @@ func (update *UpdateType) policyTlgSm(botParams botsInfo) error {
 			//CacheSystem.ChangeBotStatus(update.Message.User.Id)
 			CacheSystemUser.ChangeBotStatus(update.Message.User.Id)
 
-			// create session id for bot
-			//CacheSystem.Put(operatorBotId, sessionData{
-			//	messageId:       0,
-			//	sessionId:       operatorSession.sessionId,
-			//	botStatus:       false,
-			//	companionUserId: update.Message.User.Id,
-			//	auth:            operatorSession.auth,
-			//	busy:            true,
-			//})
-
 			CacheSystemOperator.Put(operatorBotId, sessionData{
 				messageId:       0,
 				sessionId:       operatorSession.sessionId,
@@ -170,7 +161,10 @@ func (update *UpdateType) policyTlgSm(botParams botsInfo) error {
 	return nil
 }
 
-func (update *UpdateType) policyOperator(botParams botsInfo) error {
+func (update *UpdateType) policyOperator(projectId string) error {
+	CacheSystemUser, _ := CacheUser.GetData(projectId)
+	CacheSystemOperator, _ := CacheOperator.GetData(projectId)
+	botParams, _ := BotsParams.GetData(projectId)
 
 	session, isOldSession := CacheSystemOperator.Get(update.Message.User.Id)
 
@@ -297,7 +291,9 @@ func (update *UpdateType) policyOperator(botParams botsInfo) error {
 	return nil
 }
 
-func (update *UpdateType) policyUser(botParams botsInfo) {
+func (update *UpdateType) policyUser(projectId string) {
+	CacheSystemUser, _ := CacheUser.GetData(projectId)
+	botParams, _ := BotsParams.GetData(projectId)
 
 	session, isOldSession := CacheSystemUser.Get(update.Message.User.Id)
 
@@ -309,7 +305,7 @@ func (update *UpdateType) policyUser(botParams botsInfo) {
 			CacheSystemUser.ChangeSessionStatus(update.Message.User.Id)
 
 			log.Printf("bot status is true for user")
-			_ = update.policyTlgSm(botParams)
+			_ = update.policyTlgSm(projectId)
 		} else {
 			log.Printf("bot status is false for user")
 			// TODO здесь нужно обработать запрос
@@ -338,7 +334,7 @@ func (update *UpdateType) policyUser(botParams botsInfo) {
 			botStatus:  true,
 			newSession: true,
 		})
-		_ = update.policyTlgSm(botParams)
+		_ = update.policyTlgSm(projectId)
 
 	}
 
@@ -346,20 +342,16 @@ func (update *UpdateType) policyUser(botParams botsInfo) {
 
 func (update *UpdateType) mainPolicy(botType string, projectId string) (status bool, desc string) {
 
-	params, ok := BotsParams.GetData(projectId)
-
-	if !ok {
-		return false, "project not found"
-	}
+	//params, ok := BotsParams.GetData(projectId)
 
 	// if request from operator bot
 	if botType == TypeOperator {
 		// TODO check errors
-		_ = update.policyOperator(params)
+		_ = update.policyOperator(projectId)
 		return true, "message from operator success processed"
 	} else if botType == TypeBot {
 		// TODO check errors
-		update.policyUser(params)
+		update.policyUser(projectId)
 		return true, "message from user success processed"
 	} else {
 		return false, "error, url is wrong"

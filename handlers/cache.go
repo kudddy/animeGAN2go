@@ -94,7 +94,6 @@ func (m *TTLMap) ChangeBusyStatus(k int) {
 		m.m[k] = it
 	}
 	m.l.Unlock()
-
 	return
 }
 
@@ -150,8 +149,24 @@ func (m *TTLMap) Delete(k int) {
 
 //var CacheSystem = New(1000, 1000)
 
-var CacheSystemUser = New(1000, 1000)
-var CacheSystemOperator = New(1000, 1000)
+//var CacheSystemUser = New(1000, 1000)
+//var CacheSystemOperator = New(1000, 1000)
+
+type CachePolicy struct {
+	cache map[string]*TTLMap
+}
+
+func (l *CachePolicy) AddData(projectId string, Cache *TTLMap) {
+	l.cache[projectId] = Cache
+}
+
+func (l *CachePolicy) GetData(projectIs string) (*TTLMap, bool) {
+	d, ok := l.cache[projectIs]
+	return d, ok
+}
+func (l *CachePolicy) Init() {
+	l.cache = map[string]*TTLMap{}
+}
 
 // CACHE FOR BOT PARAMS BY PROJECT
 type botsInfo struct {
@@ -191,7 +206,18 @@ func Init() botsParams {
 	return m
 }
 
+func InitCache() CachePolicy {
+	var cache CachePolicy
+	cache.Init()
+	for _, projectId := range AuthTokens {
+		cache.AddData(projectId, New(1000, 1000))
+	}
+	return cache
+}
+
 var BotsParams = Init()
+var CacheUser = InitCache()
+var CacheOperator = InitCache()
 
 // AuthTokens temporary cache for auth, in future this data we will get from database
 var AuthTokens = []string{"7d216f7c-cfee-4b76-a550-1c66a93848c9", "b1630dbc-51a4-4462-81c8-5233d2a92081"}

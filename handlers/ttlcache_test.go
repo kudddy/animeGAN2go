@@ -129,3 +129,55 @@ func TestDelete(t *testing.T) {
 	}
 
 }
+
+func TestCacheByKey(t *testing.T) {
+	var CacheBot = InitCache()
+
+	m, _ := CacheBot.GetData("7d216f7c-cfee-4b76-a550-1c66a93848c9")
+
+	session := "bot-" + time.Now().Format("2017-09-07 17:06:04.000000")
+	m.Put(814562, sessionData{
+		messageId: 0,
+		sessionId: session,
+		botStatus: true,
+		auth:      false,
+	})
+
+	newm, _ := CacheBot.GetData("7d216f7c-cfee-4b76-a550-1c66a93848c9")
+	val, ok := newm.Get(814562)
+	if !ok {
+		t.Fail()
+	}
+
+	if val.sessionId != session {
+		t.Fail()
+	}
+
+}
+
+func TestCacheByKeyTTl(t *testing.T) {
+	var CacheBot = InitCache()
+
+	m, _ := CacheBot.GetData("7d216f7c-cfee-4b76-a550-1c66a93848c9")
+
+	session := "bot-" + time.Now().Format("2017-09-07 17:06:04.000000")
+	m.Put(814562, sessionData{
+		messageId: 0,
+		sessionId: session,
+		botStatus: true,
+		auth:      false,
+	})
+
+	time.Sleep(4 * time.Second)
+
+	newm, _ := CacheBot.GetData("7d216f7c-cfee-4b76-a550-1c66a93848c9")
+	val, ok := newm.Get(814562)
+	if ok {
+		t.Fail()
+	}
+
+	if val.sessionId == session {
+		t.Fail()
+	}
+
+}
