@@ -61,7 +61,6 @@ func (m *TTLMap) IterMid(k int) {
 		m.m[k] = it
 	}
 	m.l.Unlock()
-
 	return
 }
 
@@ -91,6 +90,7 @@ func (m *TTLMap) ChangeBusyStatus(k int) {
 	m.l.Lock()
 	if it, ok := m.m[k]; ok {
 		it.value.busy = false
+		it.value.botStatus = true
 		m.m[k] = it
 	}
 	m.l.Unlock()
@@ -148,13 +148,12 @@ func (m *TTLMap) Delete(k int) {
 	m.l.Unlock()
 }
 
-var CacheSystem = New(1000, 1000)
+//var CacheSystem = New(1000, 1000)
 
 var CacheSystemUser = New(1000, 1000)
 var CacheSystemOperator = New(1000, 1000)
 
 // CACHE FOR BOT PARAMS BY PROJECT
-
 type botsInfo struct {
 	bot      string
 	operator string
@@ -194,5 +193,5 @@ func Init() botsParams {
 
 var BotsParams = Init()
 
-// temporary cache for auth, in future this data we will get from database
+// AuthTokens temporary cache for auth, in future this data we will get from database
 var AuthTokens = []string{"7d216f7c-cfee-4b76-a550-1c66a93848c9", "b1630dbc-51a4-4462-81c8-5233d2a92081"}
