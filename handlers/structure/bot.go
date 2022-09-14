@@ -1,4 +1,4 @@
-package structure
+package handlers
 
 type EditDataToTlg struct {
 	Text      string `json:"text"`

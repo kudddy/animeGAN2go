@@ -1,7 +1,7 @@
-package pg
+package handlers
 
 import (
-	"animeGAN2go/plugins"
+	handlers "animeGAN2go/handlers/plugins"
 	"fmt"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -13,7 +13,7 @@ var db *gorm.DB
 func init() {
 
 	dbUri := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=require password=%s", plugins.DbHost,
-		plugins.DbPort, plugins.Username, plugins.DbName, plugins.Password)
+		handlers.DbPort, handlers.Username, handlers.DbName, handlers.Password)
 
 	fmt.Println(dbUri)
 

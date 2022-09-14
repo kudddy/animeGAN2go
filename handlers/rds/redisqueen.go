@@ -1,7 +1,7 @@
-package rds
+package handlers
 
 import (
-	"animeGAN2go/plugins"
+	handlers "animeGAN2go/handlers/plugins"
 	"context"
 	"fmt"
 	"github.com/go-redis/redis/v8"
@@ -11,7 +11,7 @@ import (
 var ctx = context.Background()
 
 var rdb = redis.NewClient(&redis.Options{
-	Addr:     plugins.RedisHost,
+	Addr:     handlers.RedisHost,
 	Password: "", // no password set
 	DB:       0,  // use default DB
 })

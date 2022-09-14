@@ -1,12 +1,8 @@
 package Job
 
 import (
-	"animeGAN2go/MessageTypes"
 	"animeGAN2go/bot"
 	"animeGAN2go/ganserv"
-	"animeGAN2go/plugins"
-	"animeGAN2go/plugins/pg"
-	"animeGAN2go/rds"
 	"fmt"
 	"strconv"
 	"strings"

@@ -1,4 +1,4 @@
-package MessageTypes
+package handlers
 
 // ответ сервиса
 type CheckTokenResp struct {

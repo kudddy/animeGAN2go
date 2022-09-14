@@ -1,4 +1,4 @@
-package structure
+package handlers
 
 type SendDataToPush struct {
 	Data   []string `json:"data"`

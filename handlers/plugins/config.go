@@ -1,4 +1,4 @@
-package plugins
+package handlers
 
 import (
 	"github.com/joho/godotenv"
