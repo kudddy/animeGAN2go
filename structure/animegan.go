@@ -1,8 +1,10 @@
 package structure
 
 type SendDataToPush struct {
-	Data   []string `json:"data"`
-	Action string   `json:"action"`
+	FnIndex     int      `json:"fn_index"`
+	Data        []string `json:"data"`
+	Action      string   `json:"action"`
+	SessionHash string   `json:"session_hash"`
 }
 
 type SendDataStatus struct {

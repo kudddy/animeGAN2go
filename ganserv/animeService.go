@@ -75,7 +75,7 @@ func SendImageToModel(sEncPhoto string, userModel string) MessageTypes.GetModelH
 
 	arr = append(arr, userModel)
 
-	d := &structure.SendDataToPush{Data: arr, Action: "predict"}
+	d := &structure.SendDataToPush{Data: arr, Action: "predict", FnIndex: 0, SessionHash: "q0tcnstipjf"}
 
 	jsonString, err := json.Marshal(d)
 	if err != nil {
