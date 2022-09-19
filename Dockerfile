@@ -42,7 +42,7 @@ ENV bot_token=$bot_token
 
 WORKDIR /app
 
-ADD .env /
+#ADD .env /
 
 
 ENV GO111MODULE=on
@@ -69,7 +69,7 @@ FROM scratch
 
 COPY --from=builder /app/goapp /app
 
-COPY --from=builder /app/.env /goapp/app/.env
+#COPY --from=builder /app/.env /goapp/app/.env
 
 ####### Requires this ##############
 
