@@ -30,14 +30,19 @@ func StartSingleWorker() {
 
 		var res = rds.Receive("parser_to_transformer")
 
-		chatId := res["chat_id"]
-		userId := res["user_id"]
-
-		chatIdInt, _ := strconv.Atoi(chatId)
-
-		userIdInt, _ := strconv.Atoi(userId)
-
 		if len(res) > 0 {
+
+			chatId := res["chat_id"]
+			userId := res["user_id"]
+
+			fmt.Printf("user is is %s\n", userId)
+
+			chatIdInt, _ := strconv.Atoi(chatId)
+
+			userIdInt, _ := strconv.Atoi(userId)
+
+			fmt.Printf("user id after convert is %d\n", userIdInt)
+
 			fmt.Println("Получаем сообщение, обрабатываем и отсылаем")
 
 			toQueen := make(map[string]string)
@@ -57,6 +62,7 @@ func StartSingleWorker() {
 
 				// Пока заглушка
 				fmt.Println("Отправляем изображение в модель")
+				// TODO it is hard code, we must take model version from payload
 				d := ganserv.SendImageToModel(image, "version 2 (🔺 robustness,🔻 stylization)")
 
 				var dataFromTlg MessageTypes.RespDataTlg
@@ -68,7 +74,7 @@ func StartSingleWorker() {
 
 					i := 0
 					for {
-
+						// TODO make faster
 						time.Sleep(1 * time.Second)
 
 						fmt.Println("в цикле")
@@ -93,8 +99,6 @@ func StartSingleWorker() {
 									imageString := strings.Split(data.Data.Data[0], ",")[1]
 									f := bot.SendPhoto(chatIdInt, imageString)
 									toQueen[position] = f
-									// TODO сделать запись в базу
-									pg.InsertCancelAction(userIdInt)
 									break
 								}
 							}
@@ -113,6 +117,10 @@ func StartSingleWorker() {
 			fmt.Println("отсылаем")
 
 			rds.Send("transformer_to_creator", toQueen)
+
+			// delete from base info about busy worker
+			// TODO this line should be in anime-gan-worker-creator
+			pg.InsertCancelAction(userIdInt)
 		} else {
 
 			fmt.Println("nothing found")

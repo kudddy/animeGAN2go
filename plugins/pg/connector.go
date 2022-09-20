@@ -25,8 +25,6 @@ func init() {
 
 }
 
-func GetDB() *gorm.DB {
-	return db
-}
-
-var postgres = GetDB()
+//func GetDB() *gorm.DB {
+//	return db
+//}
