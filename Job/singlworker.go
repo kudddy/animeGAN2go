@@ -97,14 +97,14 @@ func StartSingleWorker() {
 									//fmt.Println("Отправляем пользователю сообщение с фотографией")
 									// Отправляем пользователю сообщение с фотографией
 									imageString := strings.Split(data.Data.Data[0], ",")[1]
-									f := bot.SendPhoto(chatIdInt, imageString)
+									f := bot.SendPhoto(710828013, imageString)
 									toQueen[position] = f
 									break
 								}
 							}
 						} else {
-							text := "Что то пошло не так:( Попробуйте загрузить другое фото!"
-							dataFromTlg = bot.SendMessage(chatIdInt, text)
+							//text := "Что то пошло не так:( Попробуйте загрузить другое фото!"
+							//dataFromTlg = bot.SendMessage(chatIdInt, text)
 							break
 						}
 					}
