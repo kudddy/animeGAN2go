@@ -11,7 +11,9 @@ func main() {
 
 	// запускаем горутину
 
-	go Job.StartSingleWorker()
+	for i := 1; i <= 3; i++ {
+		go Job.StartSingleWorker()
+	}
 
 	//memcacheClient := memcache.New("127.0.0.1:11211")
 	r := mux.NewRouter()

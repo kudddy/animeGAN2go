@@ -24,9 +24,8 @@ func StartSingleWorker() {
 	fmt.Println("get file ids from queen")
 
 	for {
-		fmt.Println("tic")
-		time.Sleep(3 * time.Second)
-		fmt.Println("tock")
+
+		time.Sleep(1 * time.Second)
 
 		var res = rds.Receive("parser_to_transformer")
 
@@ -34,6 +33,7 @@ func StartSingleWorker() {
 
 			chatId := res["chat_id"]
 			userId := res["user_id"]
+			userModel := res["user_model"]
 
 			fmt.Printf("user is is %s\n", userId)
 
@@ -62,8 +62,7 @@ func StartSingleWorker() {
 
 				// Пока заглушка
 				fmt.Println("Отправляем изображение в модель")
-				// TODO it is hard code, we must take model version from payload
-				d := ganserv.SendImageToModel(image, "version 2 (🔺 robustness,🔻 stylization)")
+				d := ganserv.SendImageToModel(image, userModel)
 
 				var dataFromTlg MessageTypes.RespDataTlg
 				if plugins.IsZeroOfUnderlyingType(d) {
