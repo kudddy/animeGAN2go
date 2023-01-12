@@ -206,8 +206,6 @@ func (update *UpdateType) policyOperator(projectId string) error {
 						return err
 					}
 
-					// delete cache from
-
 					CacheSystemOperator.ChangeBusyStatus(update.Message.User.Id)
 
 					CacheSystemUser.Delete(session.companionUserId)

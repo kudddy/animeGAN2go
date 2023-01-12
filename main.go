@@ -2,8 +2,9 @@ package main
 
 import (
 	"dialog-policy/handlers"
-	"github.com/gorilla/mux"
 	"net/http"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
@@ -13,7 +14,9 @@ func main() {
 	r := mux.NewRouter()
 
 	http.Handle("/", r)
-	r.HandleFunc("/start", handlers.Handler)
+	r.HandleFunc("/{authToken}/bot", handlers.Handler)
+	r.HandleFunc("/{authToken}/operator", handlers.Handler)
+	r.HandleFunc("/{authToken}/update", handlers.Handler)
 
-	http.ListenAndServe(":9000", nil)
+	http.ListenAndServe(":9001", nil)
 }

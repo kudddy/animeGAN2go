@@ -273,16 +273,20 @@ type appInfo struct {
 	AgeLimit        int    `json:"ageLimit"`
 	AffiliationType string `json:"affiliationType"`
 }
+type serverAction struct {
+	ActionId string `json:"action_id"`
+}
 type payload struct {
-	Intent         string    `json:"intent"`
-	OriginalIntent string    `json:"original_intent"`
-	Msg            message   `json:"message"`
-	NewSession     bool      `json:"new_session"`
-	Character      character `json:"character"`
-	ApplicationId  string    `json:"applicationId"`
-	AppversionId   string    `json:"appversionId"`
-	ProjectName    string    `json:"projectName"`
-	AppInfo        appInfo   `json:"app_info"`
+	Intent         string       `json:"intent"`
+	OriginalIntent string       `json:"original_intent"`
+	Msg            message      `json:"message"`
+	NewSession     bool         `json:"new_session"`
+	Character      character    `json:"character"`
+	ApplicationId  string       `json:"applicationId"`
+	AppversionId   string       `json:"appversionId"`
+	ProjectName    string       `json:"projectName"`
+	AppInfo        appInfo      `json:"app_info"`
+	ServerAction   serverAction `json:"server_action"`
 }
 
 type ReqToSmType struct {
@@ -378,8 +382,6 @@ type RespFromSmType struct {
 
 func (update *UpdateType) generatePayloadForSm(session sessionData) ReqToSmType {
 
-	messageName := "MESSAGE_TO_SKILL"
-
 	userUuid := Uuid{
 		UserId:      "9485D45E-466E-4852-B5DA-1A27DFF5EFC8",
 		Sub:         "1hkmItxUo6BDBmNvGM7inj4kNvWIRyQOaUzWdlqxYafPUqNZ/fTLMJ8M4idi1y467byHIwH8zAnbqt6glUevV0d8+tppO2Ysr1Ryn5PPj7nkk+7kTtDC1MnJvZVaJP3uzHxG5PPxvQpIbtQccKxegw==",
@@ -416,28 +418,42 @@ func (update *UpdateType) generatePayloadForSm(session sessionData) ReqToSmType 
 		TokenizedElementsList:           elementsList,
 	}
 
-	payload := payload{
-		Intent:         "sberauto_main",
-		OriginalIntent: "food",
-		NewSession:     session.newSession,
-		ApplicationId:  "7aa5ae84-c668-4e24-94d8-e35cf053e7a1",
-		AppversionId:   "bbddbed8-a8c6-483f-99b5-516dbae4ea70",
-		ProjectName:    "СберАвто. Подбор автомобиля",
-		AppInfo:        appInfo,
-		Msg:            message,
-		Character: character{
-			Id:     "sber",
-			Name:   "Сбер",
-			Gender: "male",
-			Appeal: "official",
-		},
+	var pload payload
+	var messageName string
+
+	if session.newSession {
+		messageName = "RUN_APP"
+		pload = payload{
+			ServerAction: serverAction{
+				ActionId: "RUN_APP",
+			},
+		}
+	} else {
+		messageName = "MESSAGE_TO_SKILL"
+		pload = payload{
+			Intent:         "sberauto_main",
+			OriginalIntent: "food",
+			NewSession:     session.newSession,
+			ApplicationId:  "7aa5ae84-c668-4e24-94d8-e35cf053e7a1",
+			AppversionId:   "bbddbed8-a8c6-483f-99b5-516dbae4ea70",
+			ProjectName:    "СберАвто. Подбор автомобиля",
+			AppInfo:        appInfo,
+			Msg:            message,
+			Character: character{
+				Id:     "sber",
+				Name:   "Сбер",
+				Gender: "male",
+				Appeal: "official",
+			},
+		}
+
 	}
 
 	reqToSmType := ReqToSmType{
 		MessageId:   session.messageId,
 		SessionId:   session.sessionId,
 		MessageName: messageName,
-		Payload:     payload,
+		Payload:     pload,
 		Uuid:        userUuid,
 	}
 
