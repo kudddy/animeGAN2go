@@ -41,7 +41,7 @@ docker push docker.io/kudddy/dialogpolicy:release-01
 run
 
 ```
-docker run -p 9000:9000 docker.io/kudddy/dialogpolicy:release-01
+docker run -p 9001:9001 docker.io/kudddy/dialogpolicy:release-02
 ```
 
 pull

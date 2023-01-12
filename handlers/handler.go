@@ -37,10 +37,11 @@ func (update *UpdateType) policyTlgSm(projectId string) error {
 	var textToUser string
 	var extraText string
 	var buts []Buttons
+	var operator bool
 
-	if resp.MessageName == "ANSWER_TO_USER" {
+	textToUser, extraText, buts, operator = resp.processRespFromSm()
 
-		textToUser, extraText, buts = resp.processRespFromSm()
+	if !operator {
 
 		var reqToTlg OutMessage
 
@@ -84,7 +85,7 @@ func (update *UpdateType) policyTlgSm(projectId string) error {
 
 		return nil
 
-	} else if resp.MessageName == "NOTHING_FOUND" {
+	} else {
 
 		// in this place we should get from db user_id with max score
 		operators := CacheSystemOperator.GetRandomAuthOperators()
@@ -140,6 +141,8 @@ func (update *UpdateType) policyTlgSm(projectId string) error {
 
 		} else {
 			textToUser = "Сейчас все операторы заняты. Пока только бот🏃‍♀️"
+			// in this plase we should delete session for user
+			CacheSystemUser.Delete(update.Message.User.Id)
 		}
 
 	}

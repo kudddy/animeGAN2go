@@ -350,8 +350,19 @@ type card struct {
 	Cells []cell `json:"cells"`
 }
 
+type action struct {
+	Tpe        *string `json:"type"`
+	ScenarioId string  `json:"scenario_id"`
+}
+
+type command struct {
+	Type   string `json:"type"`
+	Action action `json:"action"`
+}
+
 type Card struct {
-	Card card `json:"card"`
+	Card    card    `json:"card"`
+	Command command `json:"command"`
 }
 
 type payloadForSm struct {
@@ -466,32 +477,61 @@ type Buttons struct {
 	url  *string
 }
 
-func (data *RespFromSmType) processRespFromSm() (string, string, []Buttons) {
-
+func (data *RespFromSmType) processRespFromSm() (string, string, []Buttons, bool) {
 	var str string
 	var buttons []Buttons
-	if len(data.Payload.Items) > 0 {
-		if len(data.Payload.Items[0].Card.Cells) > 0 {
-			for _, value := range data.Payload.Items[0].Card.Cells {
-				if value.Type == "text_cell_view" {
-					str += " " + value.Content.Text
-				} else if value.Type == "button_cell_view" {
-					var but = Buttons{
-						text: value.Content.Text,
-						url:  value.Content.Actions[0].DeepLink,
-					}
-					buttons = append(buttons, but)
-				}
-			}
-			return data.Payload.PronounceText, str, buttons
-		} else {
-			return data.Payload.PronounceText, "", buttons
-		}
-	} else {
-		return data.Payload.PronounceText, "", buttons
-	}
+	operator := false
 
+	if len(data.Payload.Items) > 0 {
+		for _, cell := range data.Payload.Items {
+			if cell.Card.Cells != nil && len(cell.Card.Cells) > 0 {
+				for _, value := range cell.Card.Cells {
+
+					if value.Type == "text_cell_view" {
+						str += " " + value.Content.Text
+					} else if value.Type == "button_cell_view" {
+						var but = Buttons{
+							text: value.Content.Text,
+							url:  value.Content.Actions[0].DeepLink,
+						}
+						buttons = append(buttons, but)
+					}
+				}
+			} else if cell.Command.Action.Tpe != nil && *cell.Command.Action.Tpe == "redirect_to_operator" {
+				operator = true
+
+			}
+
+		}
+	}
+	if data.MessageName == "NOTHING_FOUND" {
+		operator = true
+	}
+	return data.Payload.PronounceText, "", buttons, operator
 }
+
+// if len(data.Payload.Items) > 0 {
+// 	if len(data.Payload.Items[0].Card.Cells) > 0 {
+// 		for _, value := range data.Payload.Items[0].Card.Cells {
+// 			if value.Type == "text_cell_view" {
+// 				str += " " + value.Content.Text
+// 			} else if value.Type == "button_cell_view" {
+// 				var but = Buttons{
+// 					text: value.Content.Text,
+// 					url:  value.Content.Actions[0].DeepLink,
+// 				}
+// 				buttons = append(buttons, but)
+// 			}
+// 		}
+// 		return data.Payload.PronounceText, str, buttons
+// 	} else {
+// 		return data.Payload.PronounceText, "", buttons
+// 	}
+// } else {
+// 	return data.Payload.PronounceText, "", buttons
+// }
+
+// }
 
 type UpdateBotsParams struct {
 	Bot      string `json:"bot"`
