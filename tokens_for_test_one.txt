@@ -1,0 +1,10 @@
+{
+	"888186754:AAEEVzV9tHt9vQIiRPBNzCMWI-ekn11_PdA",
+	"5409018161:AAE7hHy1C3cbmiNAvTTpT59AVYNH1_nFAVQ",
+	"https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/ZMgoqvmH:abf05f2ca8543405adad9b5bce52b548496dc2b8",
+}
+{
+    "bot": "5565544111:AAHZCmcMi1PoOFkyBP48V9Yn22mLr-GN1fs",
+    "operator": "5568938257:AAEXWu9YKomslnC_67efWwiTttLS3AKv4lc",
+    "sm-webhook": "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/cGnGPZWb:45c9c4e54edfcf2cfe505f84e3f338185a334e42"
+}

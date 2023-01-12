@@ -176,9 +176,9 @@ type botsInfo struct {
 }
 
 var BotsInfo = botsInfo{
-	"***",
-	"***",
-	"https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/ZMgoqvmH:abf05f2ca8543405adad9b5bce52b548496dc2b8",
+	"5590021672:AAFi97mI_4hcJK2YjPe7xYkO5KjtyncnzGc",
+	"5409018161:AAE7hHy1C3cbmiNAvTTpT59AVYNH1_nFAVQ",
+	"https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/tFPVKJfU:a43f2e017c60069c99b387ee5a9839eebe490999",
 }
 
 type botsParams struct {
