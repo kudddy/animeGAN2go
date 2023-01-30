@@ -39,6 +39,8 @@ func (update *UpdateType) policyTlgSm(projectId string) error {
 	var buts []Buttons
 	var operator bool
 
+	parse_mode := "Markdown style"
+
 	textToUser, extraText, buts, operator = resp.processRespFromSm()
 
 	if !operator {
@@ -67,11 +69,13 @@ func (update *UpdateType) policyTlgSm(projectId string) error {
 				Text:        textToUser + "\n" + extraText,
 				ChatId:      update.Message.Chat.Id,
 				ReplyMarkup: &inlineButtons,
+				ParseMode:   &parse_mode,
 			}
 		} else {
 			reqToTlg = OutMessage{
-				Text:   textToUser + "\n" + extraText,
-				ChatId: update.Message.Chat.Id,
+				Text:      textToUser + "\n" + extraText,
+				ChatId:    update.Message.Chat.Id,
+				ParseMode: &parse_mode,
 			}
 		}
 

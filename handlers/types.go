@@ -194,6 +194,7 @@ type OutMessage struct {
 	Text          string                `json:"text"`
 	ReplayToMsgId *int                  `json:"reply_to_message_id,omitempty"`
 	ReplyMarkup   *InlineKeyboardMarkup `json:"reply_markup,omitempty"`
+	ParseMode     *string               `json:"parse_mode,omitempty"`
 }
 
 /**
