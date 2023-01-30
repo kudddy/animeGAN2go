@@ -39,7 +39,7 @@ func (update *UpdateType) policyTlgSm(projectId string) error {
 	var buts []Buttons
 	var operator bool
 
-	parse_mode := "Markdown style"
+	parse_mode := "HTML"
 
 	textToUser, extraText, buts, operator = resp.processRespFromSm()
 
