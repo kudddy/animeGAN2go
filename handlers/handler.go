@@ -2,11 +2,16 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
+
+// var operatorSurface = flag.String("s", "tlg", "operator surface")
 
 // API errors
 //TODO create generate auth token method
@@ -39,8 +44,6 @@ func (update *UpdateType) policyTlgSm(projectId string) error {
 	var buts []Buttons
 	var operator bool
 
-	parse_mode := "HTML"
-
 	textToUser, extraText, buts, operator = resp.processRespFromSm()
 
 	if !operator {
@@ -69,13 +72,11 @@ func (update *UpdateType) policyTlgSm(projectId string) error {
 				Text:        textToUser + "\n" + extraText,
 				ChatId:      update.Message.Chat.Id,
 				ReplyMarkup: &inlineButtons,
-				ParseMode:   &parse_mode,
 			}
 		} else {
 			reqToTlg = OutMessage{
-				Text:      textToUser + "\n" + extraText,
-				ChatId:    update.Message.Chat.Id,
-				ParseMode: &parse_mode,
+				Text:   textToUser + "\n" + extraText,
+				ChatId: update.Message.Chat.Id,
 			}
 		}
 
@@ -91,62 +92,89 @@ func (update *UpdateType) policyTlgSm(projectId string) error {
 
 	} else {
 
-		// in this place we should get from db user_id with max score
-		operators := CacheSystemOperator.GetRandomAuthOperators()
-		if len(operators) > 0 {
-			// first in, first out
-			var operatorBotId = operators[0]
+		// TODO
+		// if erc adapter in this place we should start ws connection, get conversation_id and map to chat_id and save channel to user cache
 
-			operatorSession, _ := CacheSystemOperator.Get(operatorBotId)
+		if botParams.operatorSurfaceType == "tlg" {
 
-			// and create new session data for bot
+			// in this place we should get from db user_id with max score
+			operators := CacheSystemOperator.GetRandomAuthOperators()
+			if len(operators) > 0 {
+				// first in, first out
+				var operatorBotId = operators[0]
 
-			//session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
+				operatorSession, _ := CacheSystemOperator.Get(operatorBotId)
 
-			log.Printf("save session parametrs for operator when id is %d, companion id is %d", operatorBotId, update.Message.User.Id)
-			// TODO its not true
-			//CacheSystem.ChangeBotStatus(update.Message.User.Id)
-			CacheSystemUser.ChangeBotStatus(update.Message.User.Id)
+				// and create new session data for bot
 
-			CacheSystemOperator.Put(operatorBotId, sessionData{
-				messageId:       0,
-				sessionId:       operatorSession.sessionId,
-				botStatus:       false,
-				companionUserId: update.Message.User.Id,
-				auth:            operatorSession.auth,
-				busy:            true,
-			})
+				//session, _ := CacheSystem.Get(string(rune(update.Message.User.Id)))
 
-			log.Printf("save session parametrs for bot when id is %d, companion id is %d", update.Message.User.Id, operatorBotId)
-			// update user session param as companionUserId
-			//CacheSystem.Put(update.Message.User.Id, sessionData{
-			//	messageId:       session.messageId,
-			//	sessionId:       session.sessionId,
-			//	botStatus:       false,
-			//	companionUserId: operatorBotId,
-			//})
+				log.Printf("save session parametrs for operator when id is %d, companion id is %d", operatorBotId, update.Message.User.Id)
+				// TODO its not true
+				//CacheSystem.ChangeBotStatus(update.Message.User.Id)
+				CacheSystemUser.ChangeBotStatus(update.Message.User.Id)
 
-			CacheSystemUser.Put(update.Message.User.Id, sessionData{
-				messageId:       session.messageId,
-				sessionId:       session.sessionId,
-				botStatus:       false,
-				companionUserId: operatorBotId,
-			})
+				CacheSystemOperator.Put(operatorBotId, sessionData{
+					messageId:       0,
+					sessionId:       operatorSession.sessionId,
+					botStatus:       false,
+					companionUserId: update.Message.User.Id,
+					auth:            operatorSession.auth,
+					busy:            true,
+				})
 
-			s, _ := CacheSystemUser.Get(update.Message.User.Id)
+				log.Printf("save session parametrs for bot when id is %d, companion id is %d", update.Message.User.Id, operatorBotId)
+				// update user session param as companionUserId
+				//CacheSystem.Put(update.Message.User.Id, sessionData{
+				//	messageId:       session.messageId,
+				//	sessionId:       session.sessionId,
+				//	botStatus:       false,
+				//	companionUserId: operatorBotId,
+				//})
 
-			log.Printf("session parameters from cache for %d is %d", update.Message.User.Id, s.companionUserId)
+				CacheSystemUser.Put(update.Message.User.Id, sessionData{
+					messageId:       session.messageId,
+					sessionId:       session.sessionId,
+					botStatus:       false,
+					companionUserId: operatorBotId,
+				})
 
-			d, _ := CacheSystemOperator.Get(operatorBotId)
+				s, _ := CacheSystemUser.Get(update.Message.User.Id)
 
-			log.Printf("session parameters from cache for %d is %d", operatorBotId, d.companionUserId)
+				log.Printf("session parameters from cache for %d is %d", update.Message.User.Id, s.companionUserId)
 
-			textToUser = "Переадресую на оператора❤️"
+				d, _ := CacheSystemOperator.Get(operatorBotId)
 
-		} else {
-			textToUser = "Сейчас все операторы заняты. Пока только бот🏃‍♀️"
-			// in this plase we should delete session for user
-			CacheSystemUser.Delete(update.Message.User.Id)
+				log.Printf("session parameters from cache for %d is %d", operatorBotId, d.companionUserId)
+
+				textToUser = "Переадресую на оператора❤️"
+
+			} else {
+				textToUser = "Сейчас все операторы заняты. Пока только бот🏃‍♀️"
+				// in this plase we should delete session for user
+				CacheSystemUser.Delete(update.Message.User.Id)
+			}
+
+		} else if botParams.operatorSurfaceType == "erkc" {
+
+			CacheSystemUser.Put(
+				update.Message.User.Id, sessionData{
+					messageId:        session.messageId,
+					sessionId:        session.sessionId,
+					botStatus:        false,
+					incomingMessages: make(chan string),
+					messageToSend:    make(chan Messenger),
+				},
+			)
+
+			// install ws connection
+			// TODO check erros
+			go initWebsocketClient(
+				update.Message.User.Id,
+				projectId,
+				update.Message.Chat.Id,
+			)
+
 		}
 
 	}
@@ -313,21 +341,38 @@ func (update *UpdateType) policyUser(projectId string) {
 			_ = update.policyTlgSm(projectId)
 		} else {
 			log.Printf("bot status is false for user")
-			// TODO здесь нужно обработать запрос
 
-			reqToTlg := OutMessage{
-				Text:   update.Message.Text,
-				ChatId: session.companionUserId,
+			if botParams.operatorSurfaceType == "tlg" {
+
+				// TODO здесь нужно обработать запрос
+
+				reqToTlg := OutMessage{
+					Text:   update.Message.Text,
+					ChatId: session.companionUserId,
+				}
+
+				log.Printf("user with id - %d send message to operator with id - %d", update.Message.User.Id, session.companionUserId)
+
+				// send req to tlg
+				_, err := sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
+				if err != nil {
+					log.Printf("Someting wrong with request to tlg")
+					log.Print(err)
+				}
+
+			} else if botParams.operatorSurfaceType == "erkc" {
+				id := uuid.New()
+
+				response := new(Messenger)
+
+				session.messageToSend <- response.prepareData(
+					update.Message.Text,
+					int64(session.companionUserId),
+					id.String(),
+				)
+
 			}
 
-			log.Printf("user with id - %d send message to operator with id - %d", update.Message.User.Id, session.companionUserId)
-
-			// send req to tlg
-			_, err := sendReqToTlg(BuildUrl(PathSendMessage, botParams.operator), reqToTlg)
-			if err != nil {
-				log.Printf("Someting wrong with request to tlg")
-				log.Print(err)
-			}
 		}
 	} else {
 		log.Printf("for user is new session")
@@ -384,13 +429,14 @@ func (update *UpdateBotsParams) updateBotsParams(projectId string) (bool, string
 		log.Printf("someting wrong with resp to tlg where we update webhook")
 		return false, data.Description
 	}
+	// TODO
+	// //updateCache
+	// BotsParams.AddData(projectId, botsInfo{
+	// 	update.Bot,
+	// 	update.Operator,
+	// 	update.Webhook,
 
-	//updateCache
-	BotsParams.AddData(projectId, botsInfo{
-		update.Bot,
-		update.Operator,
-		update.Webhook,
-	})
+	// })
 	CacheUser.AddData(projectId, New(1000, 1000))
 	CacheOperator.AddData(projectId, New(1000, 1000))
 
@@ -429,7 +475,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 				// Логирование входящего запроса
 				log.Printf("Request received: %s\nMethod: %s\nPATH: %s\nRAW_PATH: %s\nRAW_QUERY:%s", update.Message.Text, r.Method, r.URL.Path, r.URL.RawPath, r.URL.RawQuery)
 				if err != nil {
-					panic(err)
+
+					// panic in handler is not true
+					// panic(err)
+					fmt.Printf("Error::: %s\n", err.Error())
 				}
 				status, desc = update.mainPolicy(method, projectId)
 			} else if method == TypeUpdateProject {

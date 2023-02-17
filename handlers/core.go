@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 func sendReqToSm(urlPath string, outData ReqToSmType) (RespFromSmType, error) {
@@ -28,6 +29,7 @@ func sendReqToSm(urlPath string, outData ReqToSmType) (RespFromSmType, error) {
 
 	if response.StatusCode == http.StatusOK {
 		fmt.Println("Все ок, код положительный")
+
 		decoder := json.NewDecoder(response.Body)
 
 		err = decoder.Decode(&data)
@@ -74,4 +76,26 @@ func sendReqToTlg(urlPath string, outData OutMessage) (RespFromTlg, error) {
 		//  TODO it is bug
 		return data, nil
 	}
+}
+
+// req for get session_id token
+func reqPostMessenger(url string) map[string]string {
+
+	response, err := http.Post(url, "", nil)
+
+	if err != nil {
+		fmt.Println("problems with get token")
+		os.Exit(1)
+	}
+
+	defer response.Body.Close()
+
+	var result map[string]string
+
+	decoder := json.NewDecoder(response.Body)
+
+	decoder.Decode(&result)
+
+	return result
+
 }

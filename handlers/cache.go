@@ -12,15 +12,26 @@ type Dictionary map[string]struct {
 	botStatus bool
 }
 
-// `SessionData
+// SessionData
 type sessionData struct {
-	sessionId       string
-	botStatus       bool
-	messageId       int
+	// session id
+	sessionId string
+	// user session status that says who th user is talking to, bot or operator
+	botStatus bool
+	//message id
+	messageId int
+	// id operator who user talk, for erkc is conversation id, for tlg is chat id
 	companionUserId int
-	auth            bool
-	busy            bool
-	newSession      bool
+	// param for operator, for tlg adapter they should inter pass, after this auth status change to true, default false
+	auth bool
+	// param for operator, it is say that operator talk with user
+	busy bool
+	// session status
+	newSession bool
+	// chan for send message to operator who user erkc surface
+	messageToSend chan Messenger
+	// chat for receive message from operator who user erkc surface
+	incomingMessages chan string
 }
 
 type item struct {
@@ -41,6 +52,8 @@ func New(ln int, maxTTL int) (m *TTLMap) {
 			m.l.Lock()
 			for k, v := range m.m {
 				if now.Unix()-v.lastAccess > int64(maxTTL) {
+					// send command for gracefull stop ws connection if timeout
+					close(v.value.messageToSend)
 					delete(m.m, k)
 				}
 			}
@@ -97,6 +110,16 @@ func (m *TTLMap) ChangeBusyStatus(k int) {
 	return
 }
 
+func (m *TTLMap) ChangeCompanionId(k int, companionUserId int) {
+	m.l.Lock()
+	if it, ok := m.m[k]; ok {
+		it.value.companionUserId = companionUserId
+		m.m[k] = it
+	}
+	m.l.Unlock()
+	return
+}
+
 func (m *TTLMap) Put(k int, v sessionData) {
 	m.l.Lock()
 
@@ -105,7 +128,8 @@ func (m *TTLMap) Put(k int, v sessionData) {
 
 	it = &item{value: v}
 	m.m[k] = it
-
+	// it is bug, after some operation with cache we should refresh lastAccess
+	// no it is not bug, it is true
 	it.lastAccess = time.Now().Unix()
 	m.l.Unlock()
 }
@@ -147,6 +171,19 @@ func (m *TTLMap) Delete(k int) {
 	m.l.Unlock()
 }
 
+func (m *TTLMap) GenerateChans(k int) {
+
+	m.l.Lock()
+	if it, ok := m.m[k]; ok {
+		// it.value.newSession = false
+		it.value.incomingMessages = make(chan string)
+		it.value.messageToSend = make(chan Messenger)
+		m.m[k] = it
+	}
+	m.l.Unlock()
+
+}
+
 //var CacheSystem = New(1000, 1000)
 
 //var CacheSystemUser = New(1000, 1000)
@@ -170,15 +207,27 @@ func (l *CachePolicy) Init() {
 
 // CACHE FOR BOT PARAMS BY PROJECT
 type botsInfo struct {
-	bot      string
+	// tlg token for user
+	bot string
+	// tlg token for operator
 	operator string
-	webhook  string
+	// webhook for automatization bot
+	webhook string
+	// operator surface
+	operatorSurfaceType string
+	// bot type
+	botType string
+	// stand type
+	standType string
 }
 
 var BotsInfo = botsInfo{
-	"5590021672:AAFi97mI_4hcJK2YjPe7xYkO5KjtyncnzGc",
-	"5409018161:AAE7hHy1C3cbmiNAvTTpT59AVYNH1_nFAVQ",
-	"https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/tFPVKJfU:a43f2e017c60069c99b387ee5a9839eebe490999",
+	bot:                 "5590021672:AAFi97mI_4hcJK2YjPe7xYkO5KjtyncnzGc",
+	operator:            "5409018161:AAE7hHy1C3cbmiNAvTTpT59AVYNH1_nFAVQ",
+	webhook:             "https://smartapp-code.sberdevices.ru/chatadapter/chatapi/webhook/sber_nlp2/tFPVKJfU:a43f2e017c60069c99b387ee5a9839eebe490999",
+	operatorSurfaceType: "erkc",
+	botType:             "smm",
+	standType:           "ift",
 }
 
 type botsParams struct {

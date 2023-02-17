@@ -1,6 +1,9 @@
 package handlers
 
-import "strings"
+import (
+	"math/rand"
+	"strings"
+)
 
 /**
 | ============== Types ============== |
@@ -538,4 +541,86 @@ type UpdateBotsParams struct {
 	Bot      string `json:"bot"`
 	Operator string `json:"operator"`
 	Webhook  string `json:"sm-webhook"`
+}
+
+//Types for messenger
+
+type autor struct {
+	Id       int64  `json:"id"`
+	Name     string `json:"name"`
+	Phone    string `json:"phone"`
+	Type     string `json:"type"`
+	LogUrl   string `json:"log_url"`
+	LogoUuid string `json:"logo_uuid"`
+	UserName string `json:"user_name"`
+}
+type suggestion struct {
+	OrderId int    `json:"order_id"`
+	Text    string `json:"text"`
+}
+
+type Data struct {
+	ClientMessageId int64  `json:"client_message_id"`
+	ConversationId  int64  `json:"conversation_id"`
+	Type            string `json:"type"`
+	Retry           string `json:"retry"`
+	Text            string `json:"text"`
+	UserId          string `json:"user_id"`
+	//optional for method receive_conversation
+	Conversation *Conversation `json:"conversation"`
+	//optional for method receive_text_message
+	Author *autor `json:"author"`
+	//optional for method receive_text_message
+	Suggestions *[]suggestion `json:"suggestions"`
+	//optional for method message_status_updated
+	MessageId          int64 `json:"message_id"`
+	NewMessageStatusId int   `json:"new_message_status_id"`
+}
+
+type Messenger struct {
+	Method    string  `json:"method"`
+	Id        string  `json:"id"`
+	Data      Data    `json:"data"`
+	Timestamp int64   `json:"timestamp"`
+	Error     *string `json:"error"`
+	Retry     int     `json:"retry"`
+}
+
+type Conversation struct {
+	Title            string  `json:"title"`
+	Id               int64   `json:"id"`
+	LastMessage      *string `json:"last_message"`
+	InvolvedIsersIds []int   `json:"involved_users_ids"`
+	UnreadMsgCount   int     `json:"unread_msg_count"`
+	LastUpdatedAt    int64   `json:"last_updated_at"`
+	Status           string  `json:"status"`
+}
+
+type DataReceiveConversations struct {
+	Conversation Conversation
+}
+
+type ReceiveConversations struct {
+	Id     string
+	Method string
+	Data   DataReceiveConversations
+}
+
+// type Message struct {
+// 	RequestID int
+// 	Command   string
+// }
+
+func (data Messenger) prepareData(userText string, convId int64, id string) Messenger {
+	data.Retry = 0
+	data.Method = "send_text_message"
+	data.Id = id
+	data.Timestamp = 1674725116148
+	data.Data.ClientMessageId = rand.Int63n(100000)
+	data.Data.ConversationId = convId
+	data.Data.Type = "0"
+	data.Data.Text = userText
+	data.Data.UserId = ""
+	return data
+
 }
